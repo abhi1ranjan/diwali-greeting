@@ -56,31 +56,51 @@ window.DIWALI_CONTENT = Object.freeze({
    */
   moments: [
     {
-      src: '',
+      src: 'assets/photos/moment-1.webp',
       orientation: 'portrait',
-      width: 1200,
-      height: 1500,
-      alt: '',
+      width: 960,
+      height: 1200,
+      alt: 'A smiling cricketer sits cross-legged on the grass at night, holding up a ball beside a tall gold trophy marked "ICL 2026 Winners".',
       caption: '',
       when: '',
       where: ''
     },
     {
-      src: '',
+      src: 'assets/photos/moment-2.webp',
+      orientation: 'portrait',
+      width: 960,
+      height: 1200,
+      alt: 'Two friends pose on a floodlit cricket ground; one in a navy team jersey and medal holds a bat, the other wears a white "Heartland Heroes" jersey.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
+      src: 'assets/photos/moment-3.webp',
+      orientation: 'landscape',
+      width: 1280,
+      height: 853,
+      alt: 'A cricketer sitting on the grass throws his arms wide in celebration, a ball in one hand and the winners trophy in the other.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
+      src: 'assets/photos/moment-4.webp',
+      orientation: 'portrait',
+      width: 720,
+      height: 900,
+      alt: 'The top of a carved stone temple tower at night, its row of golden kalashas glowing against a dark sky.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
+      src: 'assets/photos/moment-5.webp',
       orientation: 'landscape',
       width: 1600,
       height: 1067,
-      alt: '',
-      caption: '',
-      when: '',
-      where: ''
-    },
-    {
-      src: '',
-      orientation: 'portrait',
-      width: 1200,
-      height: 1500,
-      alt: '',
+      alt: 'The sun sets behind a cloud over a green sports ground, sending rays of light across the sky above the trees.',
       caption: '',
       when: '',
       where: ''
