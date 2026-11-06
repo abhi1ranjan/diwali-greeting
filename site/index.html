@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- GitHub Pages cannot set response headers, so the policy is delivered here.
+       Meta CSP cannot express frame-ancestors, report-to or sandbox. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; font-src 'self'; manifest-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <!-- Personal greeting: ask search engines not to index. This is not access control. -->
+  <meta name="robots" content="noindex, nofollow">
+
+  <title>Happy Diwali · A light from my home to yours</title>
+  <meta name="description" content="A small Diwali greeting from Abhishek. Light the diya to open it.">
+  <meta name="theme-color" content="#0B1026">
+  <meta name="color-scheme" content="dark">
+
+  <link rel="icon" href="assets/img/diya.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="canonical" href="https://abhi1ranjan.github.io/diwali-greeting/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="A light from my home to yours">
+  <meta property="og:title" content="Happy Diwali">
+  <meta property="og:description" content="A little light is waiting for you.">
+  <meta property="og:url" content="https://abhi1ranjan.github.io/diwali-greeting/">
+  <meta property="og:image" content="https://abhi1ranjan.github.io/diwali-greeting/assets/img/social-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A glowing clay diya on a midnight-blue background with the words Happy Diwali.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="src/boot.js"></script>
+  <script src="src/content.js" defer></script>
+  <script src="src/personalize.js" defer></script>
+  <script src="src/main.js" defer></script>
+</head>
+<body data-scene="sealed">
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="g-halo">
+        <stop offset="0" stop-color="#FFD27A" stop-opacity=".6"/>
+        <stop offset=".45" stop-color="#F28C28" stop-opacity=".2"/>
+        <stop offset="1" stop-color="#F28C28" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="g-flame" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#FFEFC4"/>
+        <stop offset=".5" stop-color="#FFD27A"/>
+        <stop offset="1" stop-color="#F28C28"/>
+      </linearGradient>
+      <linearGradient id="g-clay" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C2612F"/>
+        <stop offset="1" stop-color="#6E2716"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="sky" id="sky" aria-hidden="true">
+    <div class="sky__stars"></div>
+    <div class="sky__glow"></div>
+    <canvas class="particles" id="particles"></canvas>
+  </div>
+
+  <header class="masthead">
+    <p class="eyebrow" id="eyebrow">A light from my home to yours</p>
+  </header>
+
+  <main id="main">
+    <section class="threshold" id="threshold" aria-labelledby="threshold-line">
+      <div class="doorway">
+        <svg class="diya diya--waiting" id="waiting-diya" viewBox="0 0 120 140" aria-hidden="true" focusable="false">
+          <circle class="diya__halo" cx="60" cy="56" r="54" fill="url(#g-halo)"/>
+          <path class="diya__ghost" d="M60 26 C69 41 74 52 70.5 62 C68 69 64 72 60 72 C56 72 52 69 49.5 62 C46 52 51 41 60 26 Z"/>
+          <g class="diya__flame">
+            <path d="M60 22 C70 39 76 51 72 62 C69.5 70 65 74 60 74 C55 74 50.5 70 48 62 C44 51 50 39 60 22 Z" fill="url(#g-flame)"/>
+            <path d="M60 46 C64 53 66 59 64 65 C63 68 61.5 70 60 70 C58.5 70 57 68 56 65 C54 59 56 53 60 46 Z" fill="#FFF8E6"/>
+          </g>
+          <path d="M60 70 L60 82" stroke="#3B2618" stroke-width="3" stroke-linecap="round"/>
+          <path d="M12 82 C30 78 90 78 108 82 C106 108 86 124 60 124 C34 124 14 108 12 82 Z" fill="url(#g-clay)"/>
+          <ellipse cx="60" cy="82" rx="48" ry="6" fill="#4A1C10" stroke="#E8A83A" stroke-width="1.2"/>
+          <path d="M22 96 Q28 102 34 96 Q40 102 46 96 Q52 102 58 96 Q64 102 70 96 Q76 102 82 96 Q88 102 94 96 Q100 102 104 97" fill="none" stroke="#E8A83A" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>
+          <g fill="#FFD27A" opacity=".9"><circle cx="40" cy="108" r="1.8"/><circle cx="50" cy="111" r="1.8"/><circle cx="60" cy="112" r="1.8"/><circle cx="70" cy="111" r="1.8"/><circle cx="80" cy="108" r="1.8"/></g>
+          <ellipse cx="60" cy="127" rx="24" ry="4" fill="#3A160C"/>
+        </svg>
+        <p class="threshold__line" id="threshold-line">A little light is waiting for you.</p>
+        <button type="button" class="btn btn--primary" id="light-button">Light the diya</button>
+        <button type="button" class="btn btn--quiet btn--toggle" id="sound-toggle" aria-pressed="false" hidden>
+          <span>Soft chime</span>
+          <span class="btn__state" id="sound-state" aria-hidden="true">Off</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="greeting" id="greeting" aria-labelledby="greeting-title">
+      <div class="constellation" id="constellation" aria-hidden="true"></div>
+      <div class="greeting__art" aria-hidden="true">
+        <svg class="rangoli" viewBox="0 0 400 400" focusable="false">
+          <circle class="rangoli__dots" cx="200" cy="200" r="190"/>
+          <circle class="rangoli__line rangoli__line--gold r-c" cx="200" cy="200" r="178" pathLength="1"/>
+          <g class="rangoli__petals r-a">
+            <path class="rangoli__line" pathLength="1" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(45 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(90 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(135 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(180 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(225 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(270 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(315 200 200)" d="M200 200 C236 160 236 92 200 40 C164 92 164 160 200 200 Z"/>
+          </g>
+          <g class="rangoli__petals rangoli__petals--inner r-b">
+            <path class="rangoli__line" pathLength="1" transform="rotate(22.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(67.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(112.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(157.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(202.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(247.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(292.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+            <path class="rangoli__line" pathLength="1" transform="rotate(337.5 200 200)" d="M200 200 C222 176 222 136 200 108 C178 136 178 176 200 200 Z"/>
+          </g>
+          <circle class="rangoli__line rangoli__line--teal r-c" cx="200" cy="200" r="72" pathLength="1"/>
+          <g class="rangoli__seeds r-d">
+            <circle cx="200" cy="24" r="4"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(45 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(90 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(135 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(180 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(225 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(270 200 200)"/>
+            <circle cx="200" cy="24" r="4" transform="rotate(315 200 200)"/>
+          </g>
+          <g class="rangoli__seeds rangoli__seeds--rose r-d">
+            <circle cx="200" cy="62" r="3.2" transform="rotate(22.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(67.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(112.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(157.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(202.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(247.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(292.5 200 200)"/>
+            <circle cx="200" cy="62" r="3.2" transform="rotate(337.5 200 200)"/>
+          </g>
+        </svg>
+        <svg class="diya diya--lit" id="lit-diya" viewBox="0 0 120 140" focusable="false">
+          <circle class="diya__halo" cx="60" cy="56" r="54" fill="url(#g-halo)"/>
+          <g class="diya__flame">
+            <path d="M60 22 C70 39 76 51 72 62 C69.5 70 65 74 60 74 C55 74 50.5 70 48 62 C44 51 50 39 60 22 Z" fill="url(#g-flame)"/>
+            <path d="M60 46 C64 53 66 59 64 65 C63 68 61.5 70 60 70 C58.5 70 57 68 56 65 C54 59 56 53 60 46 Z" fill="#FFF8E6"/>
+          </g>
+          <path d="M60 70 L60 82" stroke="#3B2618" stroke-width="3" stroke-linecap="round"/>
+          <path d="M12 82 C30 78 90 78 108 82 C106 108 86 124 60 124 C34 124 14 108 12 82 Z" fill="url(#g-clay)"/>
+          <ellipse cx="60" cy="82" rx="48" ry="6" fill="#4A1C10" stroke="#E8A83A" stroke-width="1.2"/>
+          <path d="M22 96 Q28 102 34 96 Q40 102 46 96 Q52 102 58 96 Q64 102 70 96 Q76 102 82 96 Q88 102 94 96 Q100 102 104 97" fill="none" stroke="#E8A83A" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>
+          <g fill="#FFD27A" opacity=".9"><circle cx="40" cy="108" r="1.8"/><circle cx="50" cy="111" r="1.8"/><circle cx="60" cy="112" r="1.8"/><circle cx="70" cy="111" r="1.8"/><circle cx="80" cy="108" r="1.8"/></g>
+          <ellipse cx="60" cy="127" rx="24" ry="4" fill="#3A160C"/>
+        </svg>
+      </div>
+
+      <div class="greeting__words">
+        <p class="salutation rise d1" id="salutation">Dear friends and family,</p>
+        <h1 class="headline rise d2" id="greeting-title" tabindex="-1">Happy Diwali</h1>
+        <p class="hindi rise d3" id="hindi-line" lang="hi">दीपावली की हार्दिक शुभकामनाएँ</p>
+        <p class="message rise d4" id="message">May every light you kindle bring warmth to your home, courage to your heart, and joy to the paths we share. Wishing you and your loved ones a Diwali filled with peace, laughter, good health, and bright new beginnings.</p>
+        <p class="signoff rise d5"><span id="signoff">With warmth,</span><br><span class="signoff__name" id="sender">Abhishek</span></p>
+      </div>
+    </section>
+
+    <section class="moments" id="moments" aria-labelledby="moments-title">
+      <h2 class="section-title" id="moments-title">Little moments that light up the year</h2>
+      <ul class="moments__list" id="moments-list"></ul>
+    </section>
+
+    <section class="closing" id="closing" aria-labelledby="closing-title">
+      <h2 class="visually-hidden" id="closing-title">A closing blessing</h2>
+      <svg class="divider" viewBox="0 0 160 24" aria-hidden="true" focusable="false">
+        <path d="M4 12 H58 M102 12 H156" stroke="#E8A83A" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+        <path d="M80 2 C86 8 86 16 80 22 C74 16 74 8 80 2 Z M66 12 C72 8 76 10 80 12 C76 14 72 16 66 12 Z M94 12 C88 8 84 10 80 12 C84 14 88 16 94 12 Z" fill="#F28C28" opacity=".85"/>
+      </svg>
+      <p class="blessing" id="blessing">From my home to yours, may the light stay with you long after the lamps grow quiet.</p>
+      <div class="actions" id="actions">
+        <button type="button" class="btn btn--quiet" id="replay-button">Replay</button>
+        <button type="button" class="btn btn--quiet" id="copy-button">Copy greeting</button>
+        <button type="button" class="btn btn--quiet" id="share-button" hidden>Share</button>
+      </div>
+      <p class="action-status" id="action-status" role="status"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Made by hand for Diwali. No cookies, analytics or trackers.</p>
+  </footer>
+
+  <div class="visually-hidden" id="announcer" aria-live="polite"></div>
+</body>
+</html>

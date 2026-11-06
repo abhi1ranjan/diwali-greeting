@@ -1,0 +1,28 @@
+# Local QA output (screenshots, reports)
+qa/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets and local config: never commit
+.env
+.env.*
+*.pem
+*.key
+
+# Original, unprocessed photos (may contain GPS/camera metadata)
+originals/
+*.heic
+*.HEIC
+*.dng
+*.raw
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+*.swp
