@@ -574,9 +574,12 @@ main,
 /* ── Scene 4: memory moments ──────────────────────────────────────────────── */
 
 .moments {
-  max-width: 68rem;
+  position: relative;
+  max-width: 86rem;
   margin: 0 auto;
-  padding: 3rem 1.25rem;
+  padding: 3rem clamp(1rem, 3vw, 2.5rem);
+  overflow: hidden;
+  overflow: clip;
 }
 
 .section-title {
@@ -590,25 +593,101 @@ main,
   text-wrap: balance;
 }
 
+.moments__controls {
+  display: flex;
+  justify-content: center;
+  margin: -0.75rem 0 2rem;
+}
+
+/* The festival wall: a gold thread runs down the middle, with pictures kept on it
+   and others stepping out to either side. Phones get a smaller 6-column mosaic. */
 .moments__list {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  align-items: start;
-  gap: 1.75rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  align-items: center;
+  gap: 1.5rem 0.9rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.moments__list::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 2px dotted var(--line);
+}
+
+.moment {
+  position: relative;
+  min-width: 0;
+  rotate: var(--tilt, 0deg);
+  transition: rotate 0.5s var(--ease), scale 0.5s var(--ease);
+}
+
 .js .moment {
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.9s ease, transform 0.9s var(--ease);
+  transition: opacity 0.9s ease, transform 0.9s var(--ease), rotate 0.5s var(--ease), scale 0.5s var(--ease);
 }
 
 .js .moment.is-visible {
   opacity: 1;
   transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .moment:hover {
+    z-index: 3;
+    rotate: 0deg;
+    scale: 1.03;
+  }
+}
+
+/* Mobile placement: a full-width picture, then pairs at different sizes. */
+.moment--slot-a { grid-column: 1 / -1; --tilt: -0.8deg; }
+.moment--slot-b { grid-column: 2 / 6; z-index: 2; }
+.moment--slot-c { grid-column: 1 / 5; --tilt: -1.5deg; }
+.moment--slot-d { grid-column: 5 / 7; }
+.moment--slot-e { grid-column: 1 / -1; --tilt: 0.6deg; }
+.moment--slot-f { grid-column: 1 / 3; }
+.moment--slot-g { grid-column: 3 / 7; --tilt: 2deg; }
+.moment--slot-h { grid-column: 1 / 4; }
+.moment--slot-i { grid-column: 4 / 7; --tilt: -2deg; }
+.moment--slot-j { grid-column: 1 / 3; }
+.moment--slot-k { grid-column: 1 / -1; --tilt: -0.6deg; }
+.moment--slot-l { grid-column: 3 / 7; margin-top: -1rem; z-index: 2; }
+.moment--slot-m { grid-column: 1 / 5; --tilt: 1.2deg; }
+.moment--slot-n { grid-column: 5 / 7; }
+.moment--slot-o { grid-column: 3 / 5; }
+.moment--slot-p { grid-column: 1 / -1; }
+
+@media (min-width: 56rem) {
+  .moments__list {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 2.5rem 1.25rem;
+  }
+
+  .moment--slot-a { grid-area: 1 / 1 / auto / 5; --tilt: -2.5deg; margin-top: 7rem; }
+  .moment--slot-b { grid-area: 1 / 5 / auto / 9; --tilt: 0deg; margin: 0 -1rem; z-index: 2; }
+  .moment--slot-c { grid-area: 1 / 10 / auto / 13; --tilt: 2.5deg; margin-top: 3rem; }
+  .moment--slot-d { grid-area: 2 / 1 / auto / 4; margin-top: -2rem; }
+  .moment--slot-e { grid-area: 2 / 4 / auto / 10; --tilt: 0deg; z-index: 1; }
+  .moment--slot-f { grid-area: 2 / 10 / auto / 13; margin-top: 5rem; }
+  .moment--slot-g { grid-area: 3 / 1 / auto / 5; --tilt: -3.5deg; margin-top: 3rem; }
+  .moment--slot-h { grid-area: 3 / 5 / auto / 9; --tilt: 0deg; margin: -1rem 1.5rem 0; }
+  .moment--slot-i { grid-area: 3 / 9 / auto / 12; --tilt: 3.5deg; margin: 2rem 0 0 2rem; }
+  .moment--slot-j { grid-area: 4 / 1 / auto / 4; margin-top: 3rem; }
+  .moment--slot-k { grid-area: 4 / 4 / auto / 10; --tilt: 0deg; z-index: 1; }
+  .moment--slot-l { grid-area: 4 / 10 / auto / 13; margin-top: -5rem; }
+  .moment--slot-m { grid-area: 5 / 1 / auto / 5; --tilt: -2deg; }
+  .moment--slot-n { grid-area: 5 / 5 / auto / 9; margin: 0 2rem; }
+  .moment--slot-o { grid-area: 5 / 10 / auto / 13; margin-top: 4rem; }
+  .moment--slot-p { grid-area: 6 / 3 / auto / 11; --tilt: 0deg; margin-top: -2rem; z-index: 1; }
 }
 
 .moment__figure {
@@ -617,14 +696,10 @@ main,
 
 .moment__frame {
   overflow: hidden;
-  aspect-ratio: 4 / 5;
   border: 1px solid var(--line);
   border-radius: 1rem;
   background: var(--indigo);
-}
-
-.moment__frame--landscape {
-  aspect-ratio: 3 / 2;
+  box-shadow: 0 1rem 2.5rem rgba(4, 6, 20, 0.6);
 }
 
 .moment__frame img {
@@ -632,6 +707,72 @@ main,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.moment--round .moment__frame {
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  outline: 1px dashed var(--line);
+  outline-offset: 0.5rem;
+  box-shadow: 0 0 3rem rgba(255, 178, 74, 0.28);
+}
+
+.moment--arch .moment__frame {
+  border: 2px solid var(--gold);
+  border-radius: 50% 50% 1rem 1rem / 40% 40% 1rem 1rem;
+}
+
+.moment--polaroid .moment__frame {
+  padding: 0.6rem 0.6rem 1.75rem;
+  background: #FFF4D6;
+  border: 0;
+  border-radius: 0.25rem;
+  /* The frame adds padding, so the box is taller than the picture's own ratio. */
+  aspect-ratio: auto !important;
+}
+
+.moment--polaroid .moment__frame img {
+  height: auto;
+}
+
+.moment--cutout .moment__frame {
+  overflow: visible;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+}
+
+.moment--cutout img {
+  filter: drop-shadow(0 0.75rem 1.5rem rgba(4, 6, 20, 0.7));
+  animation: rangoli-turn 140s linear infinite;
+}
+
+.moment--slot-f img,
+.moment--slot-n img {
+  animation-direction: reverse;
+}
+
+@keyframes rangoli-turn {
+  to { rotate: 360deg; }
+}
+
+.moments__note {
+  max-width: 34rem;
+  margin: 2.5rem auto 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+/* Stays on screen in every scene, so the music can always be stopped. */
+.music-toggle {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 20;
+  background: rgba(11, 16, 38, 0.86);
 }
 
 .moment__placeholder {
@@ -676,7 +817,12 @@ main,
 }
 
 .moment__caption {
-  margin-top: 0.75rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.5rem auto 0;
+  padding: 0.15rem 0.6rem;
+  border-radius: 0.5rem;
+  background: rgba(11, 16, 38, 0.88);
   text-align: center;
 }
 
@@ -686,21 +832,14 @@ main,
 
 .moment__caption-text {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--text-soft);
 }
 
 .moment__meta {
   font-size: 0.875rem;
   color: var(--text-soft);
-}
-
-/* Stays on screen in every scene, so the music can always be stopped. */
-.music-toggle {
-  position: fixed;
-  top: max(0.75rem, env(safe-area-inset-top));
-  right: max(0.75rem, env(safe-area-inset-right));
-  z-index: 20;
-  background: rgba(11, 16, 38, 0.86);
 }
 
 /* ── Scene 5: closing blessing ────────────────────────────────────────────── */

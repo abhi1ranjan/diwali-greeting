@@ -68,6 +68,7 @@
   setText('sender', content.sender);
   setText('blessing', content.blessing);
   setText('moments-title', content.momentsTitle);
+  setText('moments-note', content.momentsNote);
   if (hindiLine) ui.hindi.textContent = hindiLine;
   else ui.hindi.hidden = true;
 
@@ -728,27 +729,46 @@
     return box;
   }
 
+  // Animated images: only the ones on screen play. Everyone else sees a still.
+  const animations = [];
+  let animationsPlaying = !isCalm();
+
+  function syncAnimation(item) {
+    const next = animationsPlaying && item.onScreen ? item.gif : item.still;
+    if (item.img.getAttribute('src') !== next) item.img.src = next;
+  }
+
   function renderMoment(moment, index) {
-    const portrait = moment.orientation !== 'landscape';
-    const item = make('li', 'moment');
+    const shape = /^(round|arch|polaroid|wide|square|cutout)$/.test(moment.shape) ? moment.shape : 'wide';
+    const slot = /^[a-z]$/.test(moment.slot) ? ' moment--slot-' + moment.slot : '';
+    const width = Number(moment.width) || 1200;
+    const height = Number(moment.height) || 1500;
+    const item = make('li', 'moment moment--' + shape + slot);
     const figure = make('figure', 'moment__figure');
-    const frame = make('div', 'moment__frame ' + (portrait ? 'moment__frame--portrait' : 'moment__frame--landscape'));
-    const src = P.safeAssetPath(moment.src || '', 'assets/photos/', ['avif', 'webp', 'jpg', 'jpeg', 'png']);
+    const frame = make('div', 'moment__frame');
+    frame.style.setProperty('aspect-ratio', shape === 'round' ? '1' : width + ' / ' + height);
+    const src = P.safeAssetPath(moment.src || '', 'assets/photos/', ['avif', 'webp', 'jpg', 'jpeg', 'png', 'gif']);
+    const still = P.safeAssetPath(moment.still || '', 'assets/photos/', ['avif', 'webp', 'jpg', 'jpeg', 'png']);
 
     if (src) {
       const img = document.createElement('img');
       img.alt = moment.alt || moment.caption || 'Memory photo ' + (index + 1);
-      img.width = Number(moment.width) || (portrait ? 1200 : 1600);
-      img.height = Number(moment.height) || (portrait ? 1500 : 1067);
+      img.width = width;
+      img.height = height;
       img.loading = 'lazy';
       img.decoding = 'async';
       img.addEventListener('error', () => {
-        frame.replaceChildren(placeholder(index, portrait, 'This photo could not be loaded.'));
+        frame.replaceChildren(placeholder(index, height > width, 'This photo could not be loaded.'));
       }, { once: true });
-      img.src = src;
+      if (still && src !== still) {
+        img.src = still;
+        animations.push({ img, gif: src, still, onScreen: false, host: item });
+      } else {
+        img.src = src;
+      }
       frame.appendChild(img);
     } else {
-      frame.appendChild(placeholder(index, portrait));
+      frame.appendChild(placeholder(index, height > width));
     }
     figure.appendChild(frame);
 
@@ -763,15 +783,45 @@
     return item;
   }
 
+  function setUpAnimations() {
+    if (animations.length === 0) return;
+    const toggle = byId('fireworks-toggle');
+    const label = () => { toggle.textContent = animationsPlaying ? 'Pause fireworks' : 'Play fireworks'; };
+    label();
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      animationsPlaying = !animationsPlaying;
+      label();
+      animations.forEach(syncAnimation);
+    });
+    if (!('IntersectionObserver' in window)) {
+      animations.forEach((item) => {
+        item.onScreen = true;
+        syncAnimation(item);
+      });
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const item = animations.find((candidate) => candidate.host === entry.target);
+        if (!item) return;
+        item.onScreen = entry.isIntersecting;
+        syncAnimation(item);
+      });
+    }, { rootMargin: '200px 0px' });
+    animations.forEach((item) => observer.observe(item.host));
+  }
+
   function renderMoments() {
     const section = byId('moments');
-    const moments = Array.isArray(content.moments) ? content.moments.slice(0, 5) : [];
+    const moments = Array.isArray(content.moments) ? content.moments.slice(0, 26) : [];
     if (!features.moments || moments.length === 0) {
       section.remove();
       return;
     }
     const list = byId('moments-list');
     moments.forEach((moment, index) => list.appendChild(renderMoment(moment || {}, index)));
+    setUpAnimations();
 
     const items = Array.from(list.children);
     if (isCalm() || !('IntersectionObserver' in window)) {
