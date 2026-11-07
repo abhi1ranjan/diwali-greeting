@@ -1,0 +1,12 @@
+{
+  // Cloudflare hosting for the static site in site/. Deploy with: wrangler deploy
+  "name": "diwali-greeting",
+  "compatibility_date": "2026-11-04",
+  // Off: no request logs, in line with PRIVACY.md.
+  "observability": {
+    "enabled": false
+  },
+  "assets": {
+    "directory": "site"
+  }
+}

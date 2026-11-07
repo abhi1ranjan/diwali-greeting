@@ -69,7 +69,7 @@ If the file is missing or cannot be played, the page falls back to an original l
    Or, with ffmpeg: `ffmpeg -i "My Song.mp3" -vn -map_metadata -1 -c:a aac -b:a 96k site/assets/audio/my-song.m4a`. File names must use only letters, numbers, `-` and `_`, with no spaces.
 3. **Point the page at it.** In `site/src/content.js`, set `sound.src` to `'assets/audio/my-song.m4a'`. `.mp3`, `.ogg`, `.opus` and `.webm` also work.
 4. **Remove the old file** from `site/assets/audio/` if you no longer use it.
-5. **Publish:** `git add -A site && git commit -m "Change the music" && git push`. The site updates within a couple of minutes.
+5. **Publish:** run `wrangler deploy` (the site updates within seconds), then `git add -A site && git commit -m "Change the music" && git push` to keep GitHub in sync.
 
 To use the generated loop instead of a song, set `sound.src` to `''`. `sound.volume` sets the level (0.05 to 0.6). `sound.startOnLight: false` keeps music off until the visitor presses **Music**. `features.sound: false` removes music and the button entirely.
 

@@ -48,5 +48,5 @@ Note: the page's CSP blocks `eval`, which also blocks Playwright's `wait_for_fun
 - [ ] **Lighthouse**: not run, because Node.js is not installed on this machine. In Chrome, open DevTools → Lighthouse against the deployed URL.
 - [ ] **Music**: how it sounds, its volume and how it loops, on real phone speakers and headphones. Automation measures the signal but cannot judge it by ear. Also check iPhone behaviour with the silent switch on and after locking the screen.
 - [ ] **Firework GIFs**: data use and smoothness on a real phone. They total about 7.7 MB, but only those near the screen are downloaded.
-- [ ] **After deployment**: open https://abhi1ranjan.github.io/diwali-greeting/ and `?to=YourName`, then paste the link into WhatsApp or another messenger to check the preview card.
+- [ ] **After deployment**: open https://diwali-greeting.diwali-greeting.workers.dev/ and `?to=YourName`, then paste the link into WhatsApp or another messenger to check the preview card.
 - [ ] **Photos**: after you change them, rerun `python tools/check.py`. It fails if any image still has EXIF or GPS data.

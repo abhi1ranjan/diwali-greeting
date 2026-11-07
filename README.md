@@ -2,10 +2,10 @@
 
 This is a small interactive Diwali greeting that you can share as a link. The visitor sees a quiet arched doorway with an unlit diya. They press **Light the diya**, the flame catches, warm light spreads, and a Diwali song begins and loops until the tab closes (the **Music** button stops it at any time). A rangoli draws itself in light, a short burst of marigold petals and gold dust rises, and small lamps travel out to form a constellation. Then the greeting appears, followed by a festival wall of photos, rangoli art and animated fireworks, and a closing blessing with **Replay**, **Copy greeting** and **Share**.
 
-The site is plain HTML, CSS and JavaScript, with no framework, no build step and no runtime dependencies. It is hosted on GitHub Pages.
+The site is plain HTML, CSS and JavaScript, with no framework, no build step and no runtime dependencies. It is hosted on Cloudflare (Workers static assets, free plan). GitHub holds the source code.
 
-- Public URL: **https://abhi1ranjan.github.io/diwali-greeting/**
-- Personalized link: `https://abhi1ranjan.github.io/diwali-greeting/?to=Ananya` (optional; see [PRIVACY.md](PRIVACY.md))
+- Public URL: **https://diwali-greeting.diwali-greeting.workers.dev/**
+- Personalized link: `https://diwali-greeting.diwali-greeting.workers.dev/?to=Ananya` (optional; see [PRIVACY.md](PRIVACY.md))
 
 ## Repository layout
 
@@ -65,21 +65,23 @@ python tools/check.py
 
 This runs the unit tests, static safety scans and browser checks, and writes `qa/report.txt` plus screenshots. You can also open `tests/unit.html` directly in any browser. See [TESTING.md](TESTING.md) for the latest results and the checks that still need a person.
 
-## Deploy to GitHub Pages
+## Deploy (Cloudflare)
 
-1. On GitHub, create an **empty public repository** named `diwali-greeting` under `abhi1ranjan`. Do not add a README, license or .gitignore.
-2. Push this folder:
-   ```powershell
-   git remote add origin https://github.com/abhi1ranjan/diwali-greeting.git
-   git push -u origin main
+The live site is served by Cloudflare from the `site/` folder, using the settings in `wrangler.jsonc`. GitHub Actions is not needed.
+
+1. One-time setup: `npm install -g wrangler`, then `wrangler login` and click **Allow** in the browser (Cloudflare account: the owner's).
+2. After any change, from this folder:
+   ```bash
+   wrangler deploy          # publishes site/ in a few seconds
+   git add -A && git commit -m "Describe the change" && git push   # keeps GitHub in sync
    ```
-3. In the repository, go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
-4. Go to the **Actions** tab. If the first "Deploy to GitHub Pages" run failed because Pages was not enabled yet, open it and choose **Re-run all jobs**. Later pushes to `main` deploy automatically.
-5. Visit **https://abhi1ranjan.github.io/diwali-greeting/**.
+3. Visit **https://diwali-greeting.diwali-greeting.workers.dev/**.
 
-The workflow publishes only `site/`. Tests, tools and docs are never served. It uses read-only repository access and only the `pages`/`id-token` permissions that deployment needs.
+Only `site/` is uploaded. Tests, tools and docs are never served. Request logging (`observability`) is turned off in `wrangler.jsonc`, in line with [PRIVACY.md](PRIVACY.md).
 
-**If you rename the repository** or use a different account, the page itself still works, because all asset paths are relative. Update the absolute URLs in `site/index.html` (`canonical`, `og:url`, `og:image`), plus `BASE` in `tools/serve.py` and this README.
+`.github/workflows/pages.yml` still deploys to GitHub Pages on every push, but GitHub has stopped running it because of a billing lock on the account. If that lock is cleared, both addresses will work.
+
+**If the address changes**, the page itself still works, because all asset paths are relative. Update the absolute URLs in `site/index.html` (`canonical`, `og:url`, `og:image`), plus `BASE` in `tools/serve.py` and this README.
 
 ## Indexing
 
