@@ -10,7 +10,7 @@ python tools/check.py      # writes qa/report.txt and screenshots in qa/
 
 ## Latest automated run
 
-Date: 2026-11-08 · Chrome 154 (macOS) · **28/28 checks passed**
+Date: 2026-11-08 · Chrome 154 (macOS) · **29/29 checks passed**
 
 | Area | What was checked | Result |
 | --- | --- | --- |
@@ -22,8 +22,8 @@ Date: 2026-11-08 · Chrome 154 (macOS) · **28/28 checks passed**
 | Copy | Clipboard API (text checked, share URL has no `?to=`); legacy `execCommand` fallback with the Clipboard API removed | Pass |
 | Reduced motion | Reveal happens in the same click, with no particles and no flame loop; text fully visible | Pass |
 | Particles | 56 on 1440 px, 28 on 375 px; canvas ≤ 2.5 MP; loop stops on its own; no frames while the page is hidden | Pass |
-| Music | No `AudioContext` or media element before the first click. After **Light the diya** the context runs and the signal stays audible for 26 s (RMS at least 0.002, peak below 0.9). The button stays visible and suspends it. Replay keeps one context and does not restart it; the button resumes it | Pass |
-| Festival wall | All 16 images load with alt text; a GIF plays when on screen; **Pause fireworks** and reduced motion both show stills | Pass |
+| Music | No `AudioContext` or media element before the first click. After **Light the diya** the song plays, loops and stays audible (RMS at least 0.002, peak below 0.99). The button stays visible and pauses it. Replay keeps one media element and one context and does not restart it; the button resumes it. If the song returns 404, the synthesised loop plays instead | Pass |
+| Festival wall | All 19 images load with alt text; a GIF plays when on screen; **Pause fireworks** and reduced motion both show stills | Pass |
 | No JavaScript | Full greeting, Hindi line and blessing visible; doorway, buttons and photo section hidden (no dead controls) | Pass |
 | `main.js` blocked | Falls back to the static greeting | Pass |
 | Missing photo | Placeholder "This photo could not be loaded."; caption and greeting kept | Pass |

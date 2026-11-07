@@ -528,6 +528,13 @@ main,
   color: var(--flame);
 }
 
+.diya-row {
+  display: block;
+  width: min(100%, 34rem);
+  height: auto;
+  margin: 1.5rem auto 0;
+}
+
 /* Reveal choreography (JavaScript experience only). */
 .js [data-scene="revealed"] .greeting__art {
   animation: bloom 1.4s var(--ease) both;
@@ -664,6 +671,9 @@ main,
 .moment--slot-m { grid-column: 1 / 5; --tilt: 1.2deg; }
 .moment--slot-n { grid-column: 5 / 7; }
 .moment--slot-o { grid-column: 3 / 5; }
+.moment--slot-q { grid-column: 1 / 4; --tilt: -1.5deg; }
+.moment--slot-r { grid-column: 4 / 7; }
+.moment--slot-s { grid-column: 1 / -1; --tilt: 0.8deg; }
 .moment--slot-p { grid-column: 1 / -1; }
 
 @media (min-width: 56rem) {
@@ -687,7 +697,10 @@ main,
   .moment--slot-m { grid-area: 5 / 1 / auto / 5; --tilt: -2deg; }
   .moment--slot-n { grid-area: 5 / 5 / auto / 9; margin: 0 2rem; }
   .moment--slot-o { grid-area: 5 / 10 / auto / 13; margin-top: 4rem; }
-  .moment--slot-p { grid-area: 6 / 3 / auto / 11; --tilt: 0deg; margin-top: -2rem; z-index: 1; }
+  .moment--slot-q { grid-area: 6 / 1 / auto / 4; --tilt: -2.5deg; margin-top: 2rem; }
+  .moment--slot-r { grid-area: 6 / 4 / auto / 9; margin: 0 1rem; z-index: 2; }
+  .moment--slot-s { grid-area: 6 / 9 / auto / 13; --tilt: 2deg; margin-top: 4rem; }
+  .moment--slot-p { grid-area: 7 / 3 / auto / 11; --tilt: 0deg; margin-top: -1rem; z-index: 1; }
 }
 
 .moment__figure {
@@ -849,6 +862,16 @@ main,
   margin: 0 auto;
   padding: 3rem 1.25rem 2rem;
   text-align: center;
+}
+
+.closing__diya {
+  display: block;
+  width: min(62%, 15rem);
+  height: auto;
+  margin: 0 auto 1.75rem;
+  border: 2px solid var(--gold);
+  border-radius: 50% 50% 1rem 1rem / 36% 36% 1rem 1rem;
+  box-shadow: 0 0 3.5rem rgba(255, 178, 74, 0.3);
 }
 
 .divider {

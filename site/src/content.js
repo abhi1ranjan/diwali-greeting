@@ -46,7 +46,7 @@ window.DIWALI_CONTENT = Object.freeze({
 
   momentsTitle: 'Little moments that light up the year',
 
-  momentsNote: 'The rangoli art and fireworks here were drawn by computer. They are illustrations, not real footage.',
+  momentsNote: 'The rangoli art, diya pictures and fireworks here were drawn by computer. They are illustrations, not real footage.',
 
   /*
    * The festival wall. See ASSETS.md for preparing images.
@@ -231,6 +231,39 @@ window.DIWALI_CONTENT = Object.freeze({
       where: ''
     },
     {
+      src: 'assets/photos/diya-marigold.webp',
+      shape: 'arch',
+      slot: 'q',
+      width: 900,
+      height: 1100,
+      alt: 'Illustration: seven lit diyas decorated with rings of pink, blue and gold beads, set around a cluster of yellow marigolds on red and green velvet.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
+      src: 'assets/photos/rangoli-crescent.webp',
+      shape: 'round',
+      slot: 'r',
+      width: 1000,
+      height: 1000,
+      alt: 'Illustration: a crescent-moon rangoli of deep red petals edged with white buds and marigolds, with a fan of orange petals and a brass diya inside, ringed by small lit diyas.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
+      src: 'assets/photos/diya-bokeh.webp',
+      shape: 'wide',
+      slot: 's',
+      width: 1200,
+      height: 800,
+      alt: 'Illustration: five painted clay diyas burn on a table, with warm orange lights glowing out of focus behind them.',
+      caption: '',
+      when: '',
+      where: ''
+    },
+    {
       src: 'assets/photos/fireworks-diwali-ground.gif',
       still: 'assets/photos/fireworks-diwali-ground-still.webp',
       shape: 'wide',
@@ -250,10 +283,12 @@ window.DIWALI_CONTENT = Object.freeze({
   },
 
   sound: {
-    // '' = an original raga-style loop synthesised in the browser (no file needed).
-    // Or a local file you own or have licensed, such as
-    // 'assets/audio/diwali-loop.m4a' (see ASSETS.md).
-    src: '',
+    // The song that plays and loops. To change it, put a licensed file in
+    // site/assets/audio/ and change this path (see "Changing the song" in ASSETS.md).
+    // '' = an original raga-style loop synthesised in the browser instead.
+    // Now playing: "Shaam Rangoli Si Raatein Taaron Wali" by Vishal Mishra,
+    // used under the owner's licence.
+    src: 'assets/audio/diwali-song.m4a',
     loop: true,
     // true: music starts when the visitor clicks "Light the diya".
     // false: music stays off until the visitor turns on the Music button.

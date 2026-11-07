@@ -307,8 +307,39 @@
       }, 40);
     }
 
+    // Fade the file through Web Audio where possible: iPhones ignore audio.volume.
+    function fadeOut(seconds, done) {
+      if (ctx) {
+        fadeSynth(0, seconds);
+        window.clearTimeout(fadeTimer);
+        fadeTimer = window.setTimeout(done, seconds * 1000 + 30);
+      } else {
+        fadeFile(0, seconds, done);
+      }
+    }
+
     function playFile() {
-      audio.play().then(() => fadeFile(level, FADE_IN)).catch(() => reflect(false));
+      audio.play().then(() => {
+        if (ctx) fadeSynth(level, FADE_IN);
+        else fadeFile(level, FADE_IN);
+      }).catch((error) => {
+        // A missing or unreadable file is handled by the 'error' listener below.
+        if (error && error.name === 'NotAllowedError') reflect(false);
+      });
+    }
+
+    function beginFile() {
+      audio = new Audio(src);
+      audio.loop = settings.loop !== false;
+      audio.preload = 'auto';
+      if (ctx) ctx.createMediaElementSource(audio).connect(master);
+      else audio.volume = 0;
+      audio.addEventListener('error', () => {
+        audio = null;
+        if (ctx) beginSynth(); // fall back to the synthesised loop
+        else reflect(false);
+      }, { once: true });
+      playFile();
     }
 
     // The synthesised loop: a tanpura-style drone and plucks in Sa and Pa, a soft
@@ -481,13 +512,16 @@
       }
     }
 
-    function beginSynth() {
+    function setUpOutput() {
       ctx = new AudioCtx(); // created inside the click, so Safari allows it
       ctx.resume();
       master = ctx.createGain();
       master.gain.value = 0.0001;
       const limiter = ctx.createDynamicsCompressor();
       master.connect(limiter).connect(ctx.destination);
+    }
+
+    function beginSynth() {
       room = makeRoom();
       drone();
       nextPluck = nextBell = ctx.currentTime + 0.1;
@@ -511,14 +545,9 @@
     function begin() {
       started = true;
       try {
-        if (src) {
-          audio = new Audio(src);
-          audio.loop = settings.loop !== false;
-          audio.volume = 0;
-          playFile();
-        } else {
-          beginSynth();
-        }
+        if (AudioCtx) setUpOutput();
+        if (src) beginFile();
+        else beginSynth();
       } catch (error) {
         started = false;
         reflect(false);
@@ -530,11 +559,12 @@
         begin();
         return;
       }
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(suspendTimer);
       if (audio) {
         playFile();
         return;
       }
-      window.clearTimeout(suspendTimer);
       ctx.resume().catch(() => reflect(false));
       fadeSynth(level, 0.6);
     }
@@ -542,7 +572,7 @@
     function pause() {
       if (!started) return;
       if (audio) {
-        fadeFile(0, 0.25, () => audio.pause());
+        fadeOut(0.25, () => { if (!wanted) audio.pause(); });
         return;
       }
       fadeSynth(0, 0.25);

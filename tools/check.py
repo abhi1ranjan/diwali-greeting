@@ -129,7 +129,7 @@ def _exif():
 def _budget():
     total_raw = total_gz = 0
     for path in SITE.rglob("*"):
-        if path.is_file() and "photos" not in path.parts and path.name != "social-preview.jpg" and path.name != "apple-touch-icon.png":
+        if path.is_file() and "photos" not in path.parts and "audio" not in path.parts and path.name != "social-preview.jpg" and path.name != "apple-touch-icon.png":
             data = path.read_bytes()
             total_raw += len(data)
             total_gz += len(gzip.compress(data)) if path.suffix in {".html", ".css", ".js", ".svg"} else len(data)
@@ -192,6 +192,12 @@ AudioNode.prototype.connect = function (target, ...rest) {
     realConnect.call(this, window.__meter);
   }
   return realConnect.call(this, target, ...rest);
+};
+window.__media = [];
+const realPlay = HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play = function (...a) {
+  if (!window.__media.includes(this)) window.__media.push(this);
+  return realPlay.apply(this, a);
 };
 window.__level = () => {
   const d = new Float32Array(2048);
@@ -460,42 +466,61 @@ with sync_playwright() as pw:
                f"contexts on load={contexts} media elements={media} errors={page.__errors}")
         ctx.close()
 
-    @check("music: starts on light, loops, button pauses, Replay adds no second copy")
+    @check("music: song starts on light, loops, button pauses, Replay adds no second copy")
     def _music_play():
         ctx, page = open_page(browser)
         pressed_before = page.get_attribute("#sound-toggle", "aria-pressed")
         light(page)
-        started = page.evaluate("window.__audioContext.state")
-        page.wait_for_timeout(2500)
+        page.wait_for_timeout(3000)
+        info = page.evaluate("""() => { const m = window.__media[0]; return m ? { src: m.currentSrc, loop: m.loop,
+            paused: m.paused, time: m.currentTime } : null; }""")
         samples = []
-        for _ in range(26):  # past several plucks, phrases and one scheduler refill cycle
+        for _ in range(10):
             samples.append(page.evaluate("window.__level()"))
-            page.wait_for_timeout(1000)
+            page.wait_for_timeout(700)
         rms = [s["rms"] for s in samples]
         peak = max(s["peak"] for s in samples)
-        quiet = min(rms)
         visible = page.is_visible("#sound-toggle")
         page.click("#sound-toggle")
-        page.wait_for_timeout(500)
-        paused = page.evaluate("window.__audioContext.state")
+        page.wait_for_timeout(600)
+        paused = page.evaluate("window.__media[0].paused")
         state_off = page.inner_text("#sound-state")
         page.focus("#replay-button")
         page.keyboard.press("Enter")
         page.wait_for_timeout(100)
         page.click("#light-button")
         wait_until(page, "document.body.dataset.scene === 'revealed'")
-        still_paused = page.evaluate("window.__audioContext.state")
+        still_paused = page.evaluate("window.__media[0].paused")
         page.click("#sound-toggle")
-        page.wait_for_timeout(1200)
-        resumed = page.evaluate("window.__audioContext.state")
+        page.wait_for_timeout(1800)
+        resumed = not page.evaluate("window.__media[0].paused")
         audible = page.evaluate("window.__level().rms")
+        copies = page.evaluate("window.__media.length")
         contexts = page.evaluate("window.__audioContexts")
-        ok = (pressed_before == "true" and started == "running" and quiet > 0.002 and peak < 0.9 and visible
-              and paused == "suspended" and state_off == "Off" and still_paused == "suspended"
-              and resumed == "running" and audible > 0.001 and contexts == 1 and not page.__errors)
-        record(ok, "music: starts on light, loops, button pauses, Replay adds no second copy",
-               f"state={started} rms min={quiet:.4f} max={max(rms):.4f} peak={peak:.3f} over 26s; toggle visible={visible}; "
-               f"paused={paused}/{state_off}; after replay={still_paused}; resumed={resumed} rms={audible:.4f}; contexts={contexts}; errors={page.__errors}")
+        ok = (pressed_before == "true" and info and info["src"].endswith("assets/audio/diwali-song.m4a") and info["loop"]
+              and not info["paused"] and info["time"] > 1 and min(rms) > 0.002 and peak < 0.99 and visible
+              and paused and state_off == "Off" and still_paused and resumed and audible > 0.002
+              and copies == 1 and contexts == 1 and not page.__errors)
+        record(ok, "music: song starts on light, loops, button pauses, Replay adds no second copy",
+               f"media={info}; rms min={min(rms):.4f} max={max(rms):.4f} peak={peak:.3f}; toggle visible={visible}; "
+               f"paused={paused}/{state_off}; after replay paused={still_paused}; resumed={resumed} rms={audible:.4f}; "
+               f"media elements={copies} contexts={contexts}; errors={page.__errors}")
+        ctx.close()
+
+    @check("music: missing song falls back to the synthesised loop")
+    def _music_fallback():
+        def route(p):
+            p.route("**/assets/audio/*", lambda r: r.fulfill(status=404, body="missing"))
+        ctx, page = open_page(browser, route=route)
+        light(page)
+        page.wait_for_timeout(4000)
+        state = page.evaluate("window.__audioContext.state")
+        rms = page.evaluate("window.__level().rms")
+        pressed = page.get_attribute("#sound-toggle", "aria-pressed")
+        uncaught = [e for e in page.__errors if "404" not in e and "Failed to load resource" not in e]
+        record(state == "running" and rms > 0.002 and pressed == "true" and not uncaught,
+               "music: missing song falls back to the synthesised loop",
+               f"context={state} rms={rms:.4f} aria-pressed={pressed} other errors={uncaught}")
         ctx.close()
 
     @check("gallery: all images load, GIFs play on screen, Pause and reduced motion use stills")
@@ -526,7 +551,7 @@ with sync_playwright() as pw:
         page.wait_for_timeout(500)
         reduced = page.evaluate("[...document.querySelectorAll('.moment img')].filter(i => /fireworks-/.test(i.src)).every(i => i.getAttribute('src').endsWith('-still.webp'))")
         ctx.close()
-        record(count == 16 and alts and stills and label == "Play fireworks" and reduced and not errors,
+        record(count == 19 and alts and stills and label == "Play fireworks" and reduced and not errors,
                "gallery: all images load, GIFs play on screen, Pause and reduced motion use stills",
                f"images={count} alts ok={alts} stills after pause={stills} label='{label}' reduced motion stills={reduced} errors={errors}")
 

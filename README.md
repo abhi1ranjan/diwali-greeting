@@ -1,6 +1,6 @@
 # A Light From My Home to Yours: a Diwali greeting
 
-This is a small interactive Diwali greeting that you can share as a link. The visitor sees a quiet arched doorway with an unlit diya. They press **Light the diya**, the flame catches, warm light spreads, and gentle music begins and loops until the tab closes (the **Music** button stops it at any time). A rangoli draws itself in light, a short burst of marigold petals and gold dust rises, and small lamps travel out to form a constellation. Then the greeting appears, followed by a festival wall of photos, rangoli art and animated fireworks, and a closing blessing with **Replay**, **Copy greeting** and **Share**.
+This is a small interactive Diwali greeting that you can share as a link. The visitor sees a quiet arched doorway with an unlit diya. They press **Light the diya**, the flame catches, warm light spreads, and a Diwali song begins and loops until the tab closes (the **Music** button stops it at any time). A rangoli draws itself in light, a short burst of marigold petals and gold dust rises, and small lamps travel out to form a constellation. Then the greeting appears, followed by a festival wall of photos, rangoli art and animated fireworks, and a closing blessing with **Replay**, **Copy greeting** and **Share**.
 
 The site is plain HTML, CSS and JavaScript, with no framework, no build step and no runtime dependencies. It is hosted on GitHub Pages.
 
@@ -24,6 +24,7 @@ tools/serve.py            local server that mimics the GitHub Pages sub-path
 tools/check.py            automated QA (unit, static scans, browser checks)
 tools/make_images.py      regenerates social preview + touch icon
 tools/make_festival_art.py  regenerates the rangoli art and firework GIFs
+tools/make_diya_art.py      regenerates the diya and flower-rangoli pictures
 tools/social-card.html    source for the social preview image
 .github/workflows/pages.yml  deploys site/ to GitHub Pages
 ```
@@ -35,7 +36,7 @@ Edit **`site/src/content.js`**. It holds the sender, salutation, headline, messa
 | Flag | Default | Effect |
 | --- | --- | --- |
 | `moments` | `true` | Shows the festival wall of photos, rangoli art and fireworks. |
-| `sound` | `true` | Plays looping music from the **Light the diya** click, with a **Music** on/off button that is always on screen. Nothing can play before that first click. Set `sound.startOnLight: false` to keep it off until the visitor turns it on. |
+| `sound` | `true` | Plays the song in `sound.src` (see ASSETS.md → Changing the song), looping, from the **Light the diya** click, with a **Music** on/off button that is always on screen. Nothing can play before that first click. Set `sound.startOnLight: false` to keep it off until the visitor turns it on. |
 | `share` | `true` | Shows **Share** (Web Share API), or **Copy link** where sharing is unsupported. |
 | `hindiLine` | `true` | Shows *दीपावली की हार्दिक शुभकामनाएँ*. |
 | `urlPersonalization` | `true` | Reads `?to=Name` and shows "Dear Name,". |
