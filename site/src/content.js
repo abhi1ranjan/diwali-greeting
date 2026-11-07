@@ -113,15 +113,22 @@ window.DIWALI_CONTENT = Object.freeze({
   },
 
   sound: {
-    // '' = a soft chime synthesised in the browser (no file needed).
-    // Or a local file such as 'assets/audio/chime.mp3' (see ASSETS.md).
-    src: ''
+    // '' = an original raga-style loop synthesised in the browser (no file needed).
+    // Or a local file you own or have licensed, such as
+    // 'assets/audio/diwali-loop.m4a' (see ASSETS.md).
+    src: '',
+    loop: true,
+    // true: music starts when the visitor clicks "Light the diya".
+    // false: music stays off until the visitor turns on the Music button.
+    startOnLight: true,
+    // 0.05 to 0.6. Music always fades in to this level.
+    volume: 0.35
   },
 
   features: {
     // Set to false to hide the memory section until you add real photos.
     moments: true,
-    // Offers an off-by-default "Soft chime" toggle. Nothing ever autoplays.
+    // Looping music with a Music on/off button. Nothing plays before the first click.
     sound: true,
     // Share button (Web Share API) with a copy-link fallback.
     share: true,

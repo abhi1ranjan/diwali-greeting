@@ -265,61 +265,311 @@
     }, 250);
   });
 
-  // ── Optional sound: off by default, only after an explicit toggle ─────────
+  // ── Music: starts on the first click, loops until the tab closes ───────────
+  // Browsers block audio before a user gesture, so nothing can play on load. The
+  // Music button stays on screen in every scene, so the visitor can always stop it.
   const sound = (() => {
-    const src = P.safeAssetPath((content.sound && content.sound.src) || '', 'assets/audio/',
-      ['mp3', 'm4a', 'ogg', 'opus', 'webm']);
+    const settings = content.sound || {};
+    const src = P.safeAssetPath(settings.src || '', 'assets/audio/', ['mp3', 'm4a', 'ogg', 'opus', 'webm']);
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!features.sound || (!src && !AudioCtx)) return { play() {} };
+    if (!features.sound || (!src && !AudioCtx)) return { start() {} };
 
-    let enabled = false;
+    const level = Math.min(0.6, Math.max(0.05, Number(settings.volume) || 0.35));
+    const FADE_IN = 1.5;
+    let wanted = settings.startOnLight !== false;
+    let lit = false;
+    let started = false;
     let ctx = null;
+    let master = null;
+    let room = null;
     let audio = null;
+    let fadeTimer = 0;
+    let suspendTimer = 0;
 
-    ui.soundToggle.hidden = false;
-    ui.soundToggle.addEventListener('click', () => {
-      enabled = !enabled;
-      ui.soundToggle.setAttribute('aria-pressed', String(enabled));
-      ui.soundState.textContent = enabled ? 'On' : 'Off';
-      if (enabled && !src && !ctx) ctx = new AudioCtx(); // created inside a user gesture
-    });
-
-    // A small temple-bell chime: two soft strikes with gently decaying partials.
-    function chime() {
-      if (!ctx) ctx = new AudioCtx();
-      if (ctx.state === 'suspended') ctx.resume();
-      const start = ctx.currentTime + 0.05;
-      const master = ctx.createGain();
-      master.gain.value = 0.16;
-      master.connect(ctx.destination);
-      [[0, 659.25], [0.45, 987.77]].forEach(([offset, base]) => {
-        [[1, 0.5, 2.8], [2.76, 0.12, 1.4], [5.4, 0.04, 0.7]].forEach(([ratio, peak, length]) => {
-          const t = start + offset;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = base * ratio;
-          gain.gain.setValueAtTime(0.0001, t);
-          gain.gain.exponentialRampToValueAtTime(peak, t + 0.015);
-          gain.gain.exponentialRampToValueAtTime(0.0001, t + length);
-          osc.connect(gain).connect(master);
-          osc.start(t);
-          osc.stop(t + length + 0.05);
-        });
-      });
+    function reflect(on) {
+      wanted = on;
+      ui.soundToggle.setAttribute('aria-pressed', String(on));
+      ui.soundState.textContent = on ? 'On' : 'Off';
     }
 
-    return {
-      play() {
-        if (!enabled) return;
-        if (src) {
-          audio = audio || new Audio(src);
-          audio.volume = 0.6;
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-        } else {
-          chime();
+    // A file supplied by the owner: one element, looping, with a gentle fade.
+    function fadeFile(target, seconds, done) {
+      window.clearInterval(fadeTimer);
+      const from = audio.volume;
+      const begun = performance.now();
+      fadeTimer = window.setInterval(() => {
+        const progress = Math.min(1, (performance.now() - begun) / (seconds * 1000));
+        audio.volume = from + (target - from) * progress;
+        if (progress < 1) return;
+        window.clearInterval(fadeTimer);
+        if (done) done();
+      }, 40);
+    }
+
+    function playFile() {
+      audio.play().then(() => fadeFile(level, FADE_IN)).catch(() => reflect(false));
+    }
+
+    // The synthesised loop: a tanpura-style drone and plucks in Sa and Pa, a soft
+    // bansuri-like voice in the notes of Raag Bhupali, and an occasional temple bell.
+    const BEAT = 0.72;
+    const SA = 261.63;
+    const PHRASES = [
+      [[0, 2], [2, 1], [4, 2], [7, 3]],
+      [[9, 1], [7, 1], [4, 2], [2, 1], [4, 3]],
+      [[7, 2], [9, 1], [12, 3], [9, 1], [7, 2]],
+      [[12, 1], [14, 1], [12, 1], [9, 1], [7, 3]],
+      [[4, 1], [7, 1], [9, 2], [7, 1], [4, 1], [2, 1], [0, 4]]
+    ];
+    const PLUCKS = [196, 261.63, 261.63, 130.81];
+    let nextPluck = 0;
+    let pluckIndex = 0;
+    let nextBell = 0;
+    let nextPhrase = 0;
+
+    function makeRoom() {
+      const seconds = 2.6;
+      const length = Math.floor(ctx.sampleRate * seconds);
+      const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+      for (let channel = 0; channel < 2; channel += 1) {
+        const data = impulse.getChannelData(channel);
+        for (let i = 0; i < length; i += 1) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3);
         }
+      }
+      const reverb = ctx.createConvolver();
+      reverb.buffer = impulse;
+      const wet = ctx.createGain();
+      wet.gain.value = 0.32;
+      reverb.connect(wet).connect(master);
+      return reverb;
+    }
+
+    function output() {
+      const bus = ctx.createGain();
+      bus.connect(master);
+      bus.connect(room);
+      return bus;
+    }
+
+    function tone(bus, frequency, type, at, peak, length) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+      osc.connect(gain).connect(bus);
+      osc.start(at);
+      osc.stop(at + length + 0.05);
+      return osc;
+    }
+
+    // Timers run while the music is paused, so clean up on audio time instead.
+    function freeWhenEnded(source, bus) {
+      source.onended = () => bus.disconnect();
+    }
+
+    function drone() {
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 640;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.11;
+      const breath = ctx.createOscillator();
+      const breathDepth = ctx.createGain();
+      breath.frequency.value = 0.08;
+      breathDepth.gain.value = 0.03;
+      breath.connect(breathDepth).connect(gain.gain);
+      breath.start();
+      [[130.81, -4], [130.81, 4], [196, 2], [261.63, -3]].forEach(([frequency, detune]) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.value = frequency;
+        osc.detune.value = detune;
+        osc.connect(filter);
+        osc.start();
+      });
+      filter.connect(gain).connect(output());
+    }
+
+    function pluck(at) {
+      const base = PLUCKS[pluckIndex % PLUCKS.length];
+      pluckIndex += 1;
+      const bus = output();
+      [[5, 0.012, 0.9], [3, 0.03, 1.4], [2, 0.05, 1.9]].forEach(([ratio, peak, length]) => {
+        tone(bus, base * ratio, 'sine', at, peak, length);
+      });
+      freeWhenEnded(tone(bus, base, 'sine', at, 0.075, 2.4), bus);
+    }
+
+    function bell(at) {
+      const bus = output();
+      let last = null;
+      [[0, 659.25], [0.45, 987.77]].forEach(([offset, base]) => {
+        [[2.76, 0.014, 1.5], [5.4, 0.005, 0.8], [1, 0.055, 3.2]].forEach(([ratio, peak, length]) => {
+          last = tone(bus, base * ratio, 'sine', at + offset, peak, length);
+        });
+      });
+      freeWhenEnded(last, bus);
+    }
+
+    function flutePhrase(at) {
+      const phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+      const voice = ctx.createOscillator();
+      const overtone = ctx.createOscillator();
+      const overtoneGain = ctx.createGain();
+      const vibrato = ctx.createOscillator();
+      const vibratoDepth = ctx.createGain();
+      const gain = ctx.createGain();
+      const bus = output();
+      overtone.frequency.value = 0;
+      overtoneGain.gain.value = 0.1;
+      vibrato.frequency.value = 4.6;
+      vibratoDepth.gain.value = 7; // in cents
+      vibrato.connect(vibratoDepth);
+      vibratoDepth.connect(voice.detune);
+      vibratoDepth.connect(overtone.detune);
+      voice.connect(gain);
+      overtone.connect(overtoneGain).connect(gain);
+      gain.connect(bus);
+      gain.gain.setValueAtTime(0.0001, at);
+      let time = at;
+      phrase.forEach(([semitone, beats], index) => {
+        const frequency = SA * Math.pow(2, semitone / 12);
+        const length = beats * BEAT;
+        if (index === 0) {
+          voice.frequency.setValueAtTime(frequency, time);
+          overtone.frequency.setValueAtTime(frequency * 2, time);
+        } else {
+          voice.frequency.setTargetAtTime(frequency, time, 0.05);
+          overtone.frequency.setTargetAtTime(frequency * 2, time, 0.05);
+        }
+        gain.gain.setTargetAtTime(0.085, time, 0.09);
+        gain.gain.setTargetAtTime(0.052, time + length * 0.55, 0.22);
+        time += length;
+      });
+      gain.gain.setTargetAtTime(0.0001, time, 0.5);
+      const end = time + 3;
+      [voice, overtone, vibrato].forEach((osc) => {
+        osc.start(at);
+        osc.stop(end);
+      });
+      freeWhenEnded(voice, bus);
+      return time;
+    }
+
+    function schedule() {
+      if (ctx.state !== 'running') return;
+      const now = ctx.currentTime;
+      const horizon = now + 2.5;
+      if (nextPluck < now) nextPluck = now + 0.1;
+      if (nextBell < now) nextBell = now + 0.2;
+      if (nextPhrase < now) nextPhrase = now + 0.3;
+      while (nextPluck < horizon) {
+        pluck(nextPluck);
+        nextPluck += BEAT * 2;
+      }
+      if (nextBell < horizon) {
+        bell(nextBell);
+        nextBell += 12 + Math.random() * 8;
+      }
+      if (nextPhrase < horizon) {
+        nextPhrase = flutePhrase(nextPhrase) + BEAT * (3 + Math.floor(Math.random() * 3));
+      }
+    }
+
+    function beginSynth() {
+      ctx = new AudioCtx(); // created inside the click, so Safari allows it
+      ctx.resume();
+      master = ctx.createGain();
+      master.gain.value = 0.0001;
+      const limiter = ctx.createDynamicsCompressor();
+      master.connect(limiter).connect(ctx.destination);
+      room = makeRoom();
+      drone();
+      nextPluck = nextBell = ctx.currentTime + 0.1;
+      nextPhrase = ctx.currentTime + BEAT * 2;
+      if (settings.loop === false) {
+        bell(ctx.currentTime + 0.1);
+      } else {
+        schedule();
+        window.setInterval(schedule, 500);
+      }
+      fadeSynth(level, FADE_IN);
+    }
+
+    function fadeSynth(target, seconds) {
+      const now = ctx.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setValueAtTime(Math.max(0.0001, master.gain.value), now);
+      master.gain.linearRampToValueAtTime(Math.max(0.0001, target), now + seconds);
+    }
+
+    function begin() {
+      started = true;
+      try {
+        if (src) {
+          audio = new Audio(src);
+          audio.loop = settings.loop !== false;
+          audio.volume = 0;
+          playFile();
+        } else {
+          beginSynth();
+        }
+      } catch (error) {
+        started = false;
+        reflect(false);
+      }
+    }
+
+    function resume() {
+      if (!started) {
+        begin();
+        return;
+      }
+      if (audio) {
+        playFile();
+        return;
+      }
+      window.clearTimeout(suspendTimer);
+      ctx.resume().catch(() => reflect(false));
+      fadeSynth(level, 0.6);
+    }
+
+    function pause() {
+      if (!started) return;
+      if (audio) {
+        fadeFile(0, 0.25, () => audio.pause());
+        return;
+      }
+      fadeSynth(0, 0.25);
+      window.clearTimeout(suspendTimer);
+      suspendTimer = window.setTimeout(() => ctx.suspend(), 280);
+    }
+
+    reflect(wanted);
+    ui.soundToggle.hidden = false;
+    ui.soundToggle.addEventListener('click', () => {
+      reflect(!wanted);
+      if (!lit) return; // before the diya is lit, this only sets the preference
+      if (wanted) resume();
+      else pause();
+    });
+
+    // Keep playing in the background. Phones may interrupt audio when the screen
+    // locks; when the visitor comes back, pick up where it left off.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || !started || !wanted) return;
+      if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+      if (audio && audio.paused) playFile();
+    });
+
+    return {
+      start() {
+        lit = true;
+        if (wanted && !started) begin();
       }
     };
   })();
@@ -351,7 +601,7 @@
     if (body.dataset.scene !== 'sealed') return;
     setScene('lighting');
     ui.lightButton.setAttribute('aria-disabled', 'true');
-    sound.play();
+    sound.start();
     if (isCalm()) reveal();
     else later(reveal, 1400);
   }

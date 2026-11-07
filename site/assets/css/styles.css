@@ -380,6 +380,7 @@ main,
 /* Without JavaScript the full greeting is shown; interactive controls are not. */
 .no-js .threshold,
 .no-js .moments,
+.no-js .music-toggle,
 .no-js .actions,
 .no-js .action-status {
   display: none;
@@ -691,6 +692,15 @@ main,
 .moment__meta {
   font-size: 0.875rem;
   color: var(--text-soft);
+}
+
+/* Stays on screen in every scene, so the music can always be stopped. */
+.music-toggle {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 20;
+  background: rgba(11, 16, 38, 0.86);
 }
 
 /* ── Scene 5: closing blessing ────────────────────────────────────────────── */
