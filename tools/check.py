@@ -51,7 +51,7 @@ def check(name: str):
 def text_files(base: Path):
     for path in base.rglob("*"):
         if path.is_file() and path.suffix.lower() in {".html", ".js", ".css", ".svg", ".md", ".py", ".yml", ".txt", ".json"}:
-            if ".git" in path.parts or "qa" in path.relative_to(ROOT).parts[:1]:
+            if ".git" in path.parts or ".venv" in path.parts or "qa" in path.relative_to(ROOT).parts[:1]:
                 continue
             yield path
 
@@ -116,7 +116,7 @@ def _secrets():
 def _exif():
     bad = []
     for path in SITE.rglob("*"):
-        if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".avif"}:
+        if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".avif", ".gif"}:
             with Image.open(path) as im:
                 exif = im.getexif()
                 extra = {k for k in im.info if k.lower() in {"exif", "xmp", "comment", "icc_profile", "gps"}}
@@ -183,7 +183,23 @@ URL = f"http://127.0.0.1:{PORT}{BASE}/"
 AUDIO_PROBE = """
 window.__audioContexts = 0;
 const Real = window.AudioContext;
-if (Real) window.AudioContext = class extends Real { constructor(...a) { super(...a); window.__audioContexts++; } };
+if (Real) window.AudioContext = class extends Real { constructor(...a) { super(...a); window.__audioContexts++; window.__audioContext = this; } };
+const realConnect = AudioNode.prototype.connect;
+AudioNode.prototype.connect = function (target, ...rest) {
+  if (target instanceof AudioDestinationNode && !window.__meter) {
+    window.__meter = this.context.createAnalyser();
+    window.__meter.fftSize = 2048;
+    realConnect.call(this, window.__meter);
+  }
+  return realConnect.call(this, target, ...rest);
+};
+window.__level = () => {
+  const d = new Float32Array(2048);
+  window.__meter.getFloatTimeDomainData(d);
+  let sum = 0, peak = 0;
+  for (const v of d) { sum += v * v; peak = Math.max(peak, Math.abs(v)); }
+  return { rms: Math.sqrt(sum / d.length), peak };
+};
 window.__csp = [];
 document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));
 """
@@ -301,7 +317,7 @@ with sync_playwright() as pw:
         scene = page.evaluate("document.body.dataset.scene")
         after_replay = active()
         ok = (first == "light-button" and second == "sound-toggle" and after_reveal == "greeting-title"
-              and order[:3] == ["replay-button", "copy-button", "share-button"] and scene == "sealed"
+              and order[:4] == ["fireworks-toggle", "replay-button", "copy-button", "share-button"] and scene == "sealed"
               and after_replay == "light-button" and "none" not in outline and announced == "The diya is lit.")
         record(ok, "keyboard: focus order, reveal, replay",
                f"tab1={first} ({outline}) tab2={second} afterReveal={after_reveal} announced='{announced}' "
@@ -434,20 +450,85 @@ with sync_playwright() as pw:
                f"frames while hidden={frames_hidden}, after visible={resumed}")
         ctx.close()
 
-    @check("sound: off by default, no autoplay")
-    def _sound():
+    @check("music: no audio before the first user gesture")
+    def _music_gesture():
         ctx, page = open_page(browser)
-        pressed = page.get_attribute("#sound-toggle", "aria-pressed")
+        page.wait_for_timeout(500)
+        contexts = page.evaluate("window.__audioContexts")
+        media = page.evaluate("document.querySelectorAll('audio, video').length")
+        record(contexts == 0 and media == 0 and not page.__errors, "music: no audio before the first user gesture",
+               f"contexts on load={contexts} media elements={media} errors={page.__errors}")
+        ctx.close()
+
+    @check("music: starts on light, loops, button pauses, Replay adds no second copy")
+    def _music_play():
+        ctx, page = open_page(browser)
+        pressed_before = page.get_attribute("#sound-toggle", "aria-pressed")
         light(page)
-        before = page.evaluate("window.__audioContexts")
-        page.click("#replay-button")
+        started = page.evaluate("window.__audioContext.state")
+        page.wait_for_timeout(2500)
+        samples = []
+        for _ in range(26):  # past several plucks, phrases and one scheduler refill cycle
+            samples.append(page.evaluate("window.__level()"))
+            page.wait_for_timeout(1000)
+        rms = [s["rms"] for s in samples]
+        peak = max(s["peak"] for s in samples)
+        quiet = min(rms)
+        visible = page.is_visible("#sound-toggle")
         page.click("#sound-toggle")
+        page.wait_for_timeout(500)
+        paused = page.evaluate("window.__audioContext.state")
+        state_off = page.inner_text("#sound-state")
+        page.focus("#replay-button")
+        page.keyboard.press("Enter")
+        page.wait_for_timeout(100)
         page.click("#light-button")
         wait_until(page, "document.body.dataset.scene === 'revealed'")
-        after = page.evaluate("window.__audioContexts")
-        record(pressed == "false" and before == 0 and after == 1 and not page.__errors, "sound: off by default, no autoplay",
-               f"aria-pressed={pressed} contexts before opt-in={before} after opt-in={after} errors={page.__errors}")
+        still_paused = page.evaluate("window.__audioContext.state")
+        page.click("#sound-toggle")
+        page.wait_for_timeout(1200)
+        resumed = page.evaluate("window.__audioContext.state")
+        audible = page.evaluate("window.__level().rms")
+        contexts = page.evaluate("window.__audioContexts")
+        ok = (pressed_before == "true" and started == "running" and quiet > 0.002 and peak < 0.9 and visible
+              and paused == "suspended" and state_off == "Off" and still_paused == "suspended"
+              and resumed == "running" and audible > 0.001 and contexts == 1 and not page.__errors)
+        record(ok, "music: starts on light, loops, button pauses, Replay adds no second copy",
+               f"state={started} rms min={quiet:.4f} max={max(rms):.4f} peak={peak:.3f} over 26s; toggle visible={visible}; "
+               f"paused={paused}/{state_off}; after replay={still_paused}; resumed={resumed} rms={audible:.4f}; contexts={contexts}; errors={page.__errors}")
         ctx.close()
+
+    @check("gallery: all images load, GIFs play on screen, Pause and reduced motion use stills")
+    def _gallery():
+        def all_loaded(page):
+            for item in page.locator(".moment").all():
+                item.scroll_into_view_if_needed()
+                page.wait_for_timeout(120)
+            wait_until(page, "[...document.querySelectorAll('.moment img')].every(i => i.complete && i.naturalWidth > 0)", 15000)
+        ctx, page = open_page(browser, width=1440, height=900)
+        light(page)
+        count = page.locator(".moment img").count()
+        alts = page.evaluate("[...document.querySelectorAll('.moment img')].every(i => i.alt.length > 10)")
+        all_loaded(page)
+        last = page.locator(".moment--slot-p")
+        last.scroll_into_view_if_needed()
+        wait_until(page, "document.querySelector('.moment--slot-p img').currentSrc.endsWith('.gif')", 8000)
+        page.click("#fireworks-toggle")
+        stills = page.evaluate("[...document.querySelectorAll('.moment img')].filter(i => /fireworks-/.test(i.src)).every(i => i.getAttribute('src').endsWith('-still.webp'))")
+        label = page.inner_text("#fireworks-toggle")
+        errors = list(page.__errors)
+        ctx.close()
+        ctx = browser.new_context(reduced_motion="reduce", viewport={"width": 1440, "height": 900})
+        page = ctx.new_page()
+        page.goto(URL)
+        page.click("#light-button")
+        page.locator(".moment--slot-p").scroll_into_view_if_needed()
+        page.wait_for_timeout(500)
+        reduced = page.evaluate("[...document.querySelectorAll('.moment img')].filter(i => /fireworks-/.test(i.src)).every(i => i.getAttribute('src').endsWith('-still.webp'))")
+        ctx.close()
+        record(count == 16 and alts and stills and label == "Play fireworks" and reduced and not errors,
+               "gallery: all images load, GIFs play on screen, Pause and reduced motion use stills",
+               f"images={count} alts ok={alts} stills after pause={stills} label='{label}' reduced motion stills={reduced} errors={errors}")
 
     @check("no-JS: full greeting, no dead controls")
     def _nojs():
@@ -480,8 +561,9 @@ with sync_playwright() as pw:
         def route(p):
             def fulfil(r):
                 body = (SITE / "src" / "content.js").read_text(encoding="utf-8")
-                body = body.replace("src: ''", "src: 'assets/photos/does-not-exist.webp'", 1)
-                body = body.replace("caption: ''", "caption: 'Test caption'", 1)
+                head, tail = body.split("assets/photos/moment-1.webp", 1)
+                tail = tail.replace("caption: ''", "caption: 'Test caption'", 1)
+                body = head + "assets/photos/does-not-exist.webp" + tail
                 r.fulfill(status=200, content_type="application/javascript", body=body)
             p.route("**/src/content.js", fulfil)
         ctx, page = open_page(browser, route=route)
@@ -489,7 +571,7 @@ with sync_playwright() as pw:
         page.locator("#moments").scroll_into_view_if_needed()
         wait_until(page, "document.querySelector('.moment .moment__placeholder-title') && "
                          "document.querySelector('.moment .moment__placeholder-title').textContent.includes('could not')")
-        caption = page.inner_text(".moment__caption-text")
+        caption = page.inner_text(".moment--slot-b .moment__caption-text")
         record(page.is_visible("#greeting-title") and caption == "Test caption", "missing photo: placeholder, greeting intact",
                f"first moment shows 'This photo could not be loaded.', caption kept='{caption}'")
         ctx.close()

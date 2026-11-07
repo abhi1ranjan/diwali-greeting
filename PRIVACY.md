@@ -7,7 +7,7 @@ This is a static greeting page. It is plain HTML, CSS and JavaScript served by G
 - No cookies, `localStorage` or `sessionStorage`.
 - No analytics, advertising, tracking pixels, fonts or scripts from other sites, or remote embeds.
 - No forms, logins or accounts. The page does not send data anywhere. Its Content Security Policy sets `connect-src 'none'`.
-- All images, styles and scripts load from the same site. The optional chime is generated in your browser. Sound stays off unless you turn it on.
+- All images, styles and scripts load from the same site. The music is generated in your browser, so no audio is downloaded. Nothing plays until you click **Light the diya**, and the **Music** button stops it at any time.
 - **Copy greeting** and **Share** run only when you press them. Copying puts text on your own clipboard. Sharing opens your device's share sheet or copies the link.
 - The page sets `Referrer-Policy: no-referrer` (as a `<meta>` tag). When someone follows a link out of the page, the browser does not send this page's address.
 

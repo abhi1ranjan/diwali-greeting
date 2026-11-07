@@ -1,15 +1,20 @@
-# Assets: replacing photos and audio, and license notes
+# Assets: photos, festival art, music and license notes
 
-## Memory photos
+## The festival wall
 
-The "Little moments that light up the year" section shows 3 to 5 photos. It has **three labeled placeholders** right now. Before you share the link, either add real photos or hide the section by setting `features.moments: false` in `site/src/content.js`.
+The "Little moments that light up the year" section mixes three kinds of image, all listed in the `moments` array in `site/src/content.js`:
+
+- **Your photos**: `moment-1.webp` to `moment-5.webp`.
+- **Rangoli art**: `art-rangoli-*.webp`, transparent cut-outs drawn by `tools/make_festival_art.py`.
+- **Fireworks**: `fireworks-*.gif` with matching `fireworks-*-still.webp` frames, drawn by the same script. They are inspired by the style of each festival, not footage of it, and the page says so.
+
+To regenerate the art, run `pip install numpy scipy pillow`, then `python tools/make_festival_art.py`. To move a picture, change its `shape` and `slot`; the slots are placed in `styles.css` under `.moment--slot-*`.
+
+A GIF must have a `still` image. The page shows the still until the picture is on screen, when the visitor presses **Pause fireworks**, and for anyone who prefers reduced motion. Keep each GIF under about 2 MB and avoid full-frame flashes.
 
 ### 1. Prepare each photo
 
-| Orientation | Aspect ratio | Recommended size | `orientation` value |
-| --- | --- | --- | --- |
-| Portrait | 4:5 | 1200 × 1500 px | `'portrait'` |
-| Landscape | 3:2 | 1600 × 1067 px | `'landscape'` |
+Any aspect ratio works. Keep the real proportions, with the long side no more than about 1600 px. Use `shape: 'round'` for images that still read well when cropped to a circle.
 
 - Format: **WebP**. All current browsers support it. AVIF, JPEG and PNG also work.
 - Size: aim for **150 to 300 KB** per photo.
@@ -19,10 +24,10 @@ The "Little moments that light up the year" section shows 3 to 5 photos. It has 
 One way to resize, crop and strip metadata with Pillow, which is already used by the tools:
 
 ```powershell
-python -c "from PIL import Image, ImageOps; im = ImageOps.exif_transpose(Image.open('originals/diya-night.jpg')).convert('RGB'); ImageOps.fit(im, (1200, 1500)).save('site/assets/photos/moment-1.webp', 'WEBP', quality=80, method=6)"
+python -c "from PIL import Image, ImageOps; im = ImageOps.exif_transpose(Image.open('originals/diya-night.jpg')).convert('RGB'); im.thumbnail((1600, 1600)); im.save('site/assets/photos/moment-1.webp', 'WEBP', quality=80, method=6)"
 ```
 
-Pillow writes a new file without EXIF, so this also removes GPS and camera data. For landscape photos, use `(1600, 1067)`. Adjust `quality` (70 to 85) to stay within the size target. `python tools/check.py` fails if a published image still has EXIF, XMP or GPS data.
+Pillow writes a new file without EXIF, so this also removes GPS and camera data. Adjust `quality` (70 to 85) to stay within the size target. `python tools/check.py` fails if a published image still has EXIF, XMP or GPS data.
 
 ### 2. Point the content file at it
 
@@ -45,15 +50,17 @@ In `site/src/content.js`:
 - `width` and `height` should match the real file. This reserves space and prevents layout shift.
 - Images load lazily. If a file is missing or fails to load, a quiet placeholder appears and the caption stays.
 
-## Optional audio
+## Music
 
-By default, the **Soft chime** toggle plays a short bell sound. JavaScript generates it with the Web Audio API, so there is no file to download or license. It never plays unless the visitor turns the toggle on.
+By default, the page plays an original loop that JavaScript generates with the Web Audio API: a tanpura-style drone and plucks, a soft flute-like voice in the notes of Raag Bhupali, and an occasional temple bell. There is no file to download or license. It starts on the **Light the diya** click, fades in, and loops until the tab closes. Replay never starts a second copy. On phones, the system may stop it when the screen locks or the browser goes to the background, and the iPhone silent switch can mute it.
 
-To use your own recording instead:
+To use your own audio instead:
 
-1. Add a short, quiet clip (under 3 seconds, under 60 KB, MP3/M4A/OGG/Opus) to `site/assets/audio/`, for example `chime.mp3`. Use only audio you recorded yourself or have a license for.
-2. Set `sound: { src: 'assets/audio/chime.mp3' }` in `content.js`.
-3. To remove the sound control entirely, set `features.sound: false`.
+1. **Check the rights first.** This site is public, so publishing a file redistributes it. Use only audio you recorded yourself or have a license for, and record which here. Commercially released songs are not covered by owning a copy of them.
+2. Trim a loop of 30 to 90 seconds, at 64 to 96 kbps and **under about 1 MB**, with low, normalised loudness. Prefer AAC in `.m4a` or Opus in `.webm`/`.ogg`, because MP3 leaves a small gap at the loop point.
+3. Add it to `site/assets/audio/`, for example `diwali-loop.m4a`, and set `sound.src` to `'assets/audio/diwali-loop.m4a'` in `content.js`.
+
+`sound.volume` sets the level (0.05 to 0.6). `sound.startOnLight: false` keeps music off until the visitor presses **Music**. `features.sound: false` removes music and the button entirely.
 
 ## Social preview and icons
 
@@ -67,7 +74,7 @@ The preview has no recipient name. If you change the wording, edit `tools/social
 
 ## License notes
 
-All bundled visual assets are original to this repository: diya and rangoli SVG artwork, CSS textures and the generated social preview and icon. There are no stock photos, icon packs, web fonts or audio files.
+All bundled artwork is original to this repository: diya and rangoli SVG artwork, CSS textures, the generated social preview and icon, and the rangoli art and firework animations drawn by `tools/make_festival_art.py`. The music is generated in the browser. There are no stock photos, icon packs, web fonts or audio files.
 
 - **Fonts**: none are bundled. The page uses fonts already installed on the visitor's device. The social preview image was rendered on Windows with installed system fonts (Palatino Linotype, Nirmala UI). If you need to be strict about font licensing for that image, regenerate it on a machine with open-licensed fonts such as Noto Serif and Noto Sans Devanagari.
 - **Photos and audio you add** belong to you. Only publish media you own or have permission to share, and ask the people in your photos before you publish them.

@@ -10,7 +10,7 @@ python tools/check.py      # writes qa/report.txt and screenshots in qa/
 
 ## Latest automated run
 
-Date: 2026-11-06 · Chrome 156 (Windows) · **26/26 checks passed**
+Date: 2026-11-08 · Chrome 154 (macOS) · **28/28 checks passed**
 
 | Area | What was checked | Result |
 | --- | --- | --- |
@@ -22,7 +22,8 @@ Date: 2026-11-06 · Chrome 156 (Windows) · **26/26 checks passed**
 | Copy | Clipboard API (text checked, share URL has no `?to=`); legacy `execCommand` fallback with the Clipboard API removed | Pass |
 | Reduced motion | Reveal happens in the same click, with no particles and no flame loop; text fully visible | Pass |
 | Particles | 56 on 1440 px, 28 on 375 px; canvas ≤ 2.5 MP; loop stops on its own; no frames while the page is hidden | Pass |
-| Sound | Toggle starts `aria-pressed="false"`; no `AudioContext` until the visitor opts in | Pass |
+| Music | No `AudioContext` or media element before the first click. After **Light the diya** the context runs and the signal stays audible for 26 s (RMS at least 0.002, peak below 0.9). The button stays visible and suspends it. Replay keeps one context and does not restart it; the button resumes it | Pass |
+| Festival wall | All 16 images load with alt text; a GIF plays when on screen; **Pause fireworks** and reduced motion both show stills | Pass |
 | No JavaScript | Full greeting, Hindi line and blessing visible; doorway, buttons and photo section hidden (no dead controls) | Pass |
 | `main.js` blocked | Falls back to the static greeting | Pass |
 | Missing photo | Placeholder "This photo could not be loaded."; caption and greeting kept | Pass |
@@ -45,6 +46,7 @@ Note: the page's CSP blocks `eval`, which also blocks Playwright's `wait_for_fun
 - [ ] **Screen reader**: NVDA or VoiceOver pass through the reveal, the announcements and the buttons.
 - [ ] **Real 200% browser zoom** (Ctrl + +). It was only approximated above.
 - [ ] **Lighthouse**: not run, because Node.js is not installed on this machine. In Chrome, open DevTools → Lighthouse against the deployed URL.
-- [ ] **Chime volume and feel** on phone speakers.
+- [ ] **Music**: how it sounds, its volume and how it loops, on real phone speakers and headphones. Automation measures the signal but cannot judge it by ear. Also check iPhone behaviour with the silent switch on and after locking the screen.
+- [ ] **Firework GIFs**: data use and smoothness on a real phone. They total about 7.7 MB, but only those near the screen are downloaded.
 - [ ] **After deployment**: open https://abhi1ranjan.github.io/diwali-greeting/ and `?to=YourName`, then paste the link into WhatsApp or another messenger to check the preview card.
-- [ ] **Photos**: after you add them, rerun `python tools/check.py`. It fails if any image still has EXIF or GPS data.
+- [ ] **Photos**: after you change them, rerun `python tools/check.py`. It fails if any image still has EXIF or GPS data.
