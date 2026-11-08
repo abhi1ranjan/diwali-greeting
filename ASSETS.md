@@ -70,7 +70,7 @@ To use the generated loop instead of a song, set `sound.src` to `''`. `sound.vol
 
 | File | Size | Source |
 | --- | --- | --- |
-| `site/assets/img/social-preview.jpg` | 1200 × 630 | Rendered from `tools/social-card.html` by `python tools/make_images.py` |
+| `site/assets/img/social-card-diyas.jpg` | 1200 × 630 | Rendered from `tools/social-card.html` by `python tools/make_images.py` |
 | `site/assets/img/apple-touch-icon.png` | 180 × 180 | Rendered from `site/assets/img/diya.svg` by the same script |
 | `site/assets/img/diya.svg` | vector | Hand-written for this project |
 

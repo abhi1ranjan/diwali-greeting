@@ -21,7 +21,7 @@ def main() -> None:
         page.goto((ROOT / "tools" / "social-card.html").as_uri())
         page.wait_for_timeout(300)
         shot = Image.open(BytesIO(page.screenshot(type="png"))).convert("RGB")
-        shot.save(IMG / "social-preview.jpg", "JPEG", quality=84, optimize=True, progressive=True)
+        shot.save(IMG / "social-card-diyas.jpg", "JPEG", quality=84, optimize=True, progressive=True)
 
         icon = browser.new_page(viewport={"width": 180, "height": 180})
         icon.goto((IMG / "diya.svg").as_uri())
@@ -33,7 +33,7 @@ def main() -> None:
         tile.convert("RGB").save(IMG / "apple-touch-icon.png", "PNG", optimize=True)
         browser.close()
 
-    for name in ("social-preview.jpg", "apple-touch-icon.png"):
+    for name in ("social-card-diyas.jpg", "apple-touch-icon.png"):
         path = IMG / name
         with Image.open(path) as im:
             print(f"{name}: {im.size[0]}x{im.size[1]}, {path.stat().st_size / 1024:.1f} KB")

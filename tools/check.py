@@ -129,7 +129,7 @@ def _exif():
 def _budget():
     total_raw = total_gz = 0
     for path in SITE.rglob("*"):
-        if path.is_file() and "photos" not in path.parts and "audio" not in path.parts and path.name != "social-preview.jpg" and path.name != "apple-touch-icon.png":
+        if path.is_file() and "photos" not in path.parts and "audio" not in path.parts and path.name != "social-card-diyas.jpg" and path.name != "apple-touch-icon.png":
             data = path.read_bytes()
             total_raw += len(data)
             total_gz += len(gzip.compress(data)) if path.suffix in {".html", ".css", ".js", ".svg"} else len(data)
@@ -277,7 +277,7 @@ with sync_playwright() as pw:
     def _reload():
         ctx, page = open_page(browser)
         statuses = []
-        for path in ("", "index.html", "?to=Ananya", "assets/css/styles.css", "src/main.js", "assets/img/social-preview.jpg"):
+        for path in ("", "index.html", "?to=Ananya", "assets/css/styles.css", "src/main.js", "assets/img/social-card-diyas.jpg"):
             statuses.append((path or "/", page.goto(URL + path).status))
         page.reload()
         record(all(s == 200 for _, s in statuses), "page reload / direct URLs under sub-path", str(statuses))
