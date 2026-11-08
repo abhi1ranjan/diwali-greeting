@@ -1,17 +1,10 @@
 # Assets: photos, festival art, music and license notes
 
-## The festival wall
+## The photo wall
 
-The "Little moments that light up the year" section mixes three kinds of image, all listed in the `moments` array in `site/src/content.js`:
+The "Little moments that light up the year" section shows the Diwali photos listed in the `moments` array in `site/src/content.js`: diyas, rangoli and festive lights, all used with the owner's permission. The single sparkling diya above the closing blessing is `site/assets/img/diya-sparkle.webp`.
 
-- **Your photos**: `moment-1.webp` to `moment-5.webp`.
-- **Rangoli art**: `art-rangoli-*.webp`, transparent cut-outs drawn by `tools/make_festival_art.py`.
-- **Diya pictures**: `diya-bokeh.webp`, `diya-marigold.webp` and `rangoli-crescent.webp`, drawn by `tools/make_diya_art.py`. The same script draws `site/assets/img/diya-row.webp` (under the greeting) and `diya-sparkle.webp` (above the closing blessing).
-- **Fireworks**: `fireworks-*.gif` with matching `fireworks-*-still.webp` frames, drawn by the same script. They are inspired by the style of each festival, not footage of it, and the page says so.
-
-To regenerate the art, run `pip install numpy scipy pillow`, then `python tools/make_festival_art.py`. To move a picture, change its `shape` and `slot`; the slots are placed in `styles.css` under `.moment--slot-*`.
-
-A GIF must have a `still` image. The page shows the still until the picture is on screen, when the visitor presses **Pause fireworks**, and for anyone who prefers reduced motion. Keep each GIF under about 2 MB and avoid full-frame flashes.
+To move a picture, change its `shape` (`round`, `arch`, `polaroid`, `wide` or `square`) and `slot` (`a` to `g`). The slots are placed in `styles.css` under `.moment--slot-*`.
 
 ### 1. Prepare each photo
 
@@ -53,16 +46,16 @@ In `site/src/content.js`:
 
 ## Music
 
-The page plays **"Shaam Rangoli Si Raatein Taaron Wali"** by Vishal Mishra from `site/assets/audio/diwali-song.m4a`, used under the owner's licence. It starts on the **Light the diya** click (browsers block sound before a click), fades in to a gentle level and loops until the tab closes. The **Music** button stays on screen and stops it at any time, and Replay never starts a second copy. On phones, the system may stop it when the screen locks, and the iPhone silent switch can mute it.
+The page plays an 18-second clip of **"Jai Raghuvanshi Ayodhyapati Ram Chandra Ki Jai"** (0:07 to 0:25) from `site/assets/audio/jai-raghuvanshi-loop.m4a`, used under the owner's licence. It starts on the **Light the diya** click (browsers block sound before a click), fades in to a gentle level and loops until the tab closes. The **Music** button stays on screen and stops it at any time, and Replay never starts a second copy. On phones, the system may stop it when the screen locks, and the iPhone silent switch can mute it.
 
-The file was prepared from the 320 kbps MP3 with a 1-second fade-in and a 4-second fade-out, so the loop restarts smoothly. It was encoded as AAC at 96 kbps, which is about 3.5 MB, and it streams, so playback starts before the whole file arrives.
+The clip's last 0.4 seconds are blended into the audio just before 0:07, so the end flows back into the start. It is about 0.3 MB of 128 kbps AAC. The page downloads it once, decodes it and loops it in Web Audio, which avoids the small gap an `<audio>` loop leaves.
 
 If the file is missing or cannot be played, the page falls back to an original loop generated in the browser: a tanpura-style drone, a soft flute line in Raag Bhupali and an occasional temple bell.
 
 ### Changing the song
 
 1. **Check the rights.** The site is public, so publishing a song redistributes it. Use only audio you recorded yourself or have a licence for.
-2. **Convert it** to AAC (`.m4a`) at 96 kbps, which keeps the file small. On a Mac, you can use the built-in `afconvert`:
+2. **Convert it** to AAC (`.m4a`), which keeps the file small. Short clips loop best. To cut a clip, trim it first (for example with `ffmpeg -ss 7 -to 25 -i "My Song.mp3" clip.wav`), then convert. On a Mac, you can use the built-in `afconvert`:
    ```bash
    afconvert -f m4af -d aac -b 96000 "My Song.mp3" site/assets/audio/my-song.m4a
    ```
@@ -85,7 +78,7 @@ The preview has no recipient name. If you change the wording, edit `tools/social
 
 ## License notes
 
-All bundled artwork is original to this repository: diya and rangoli SVG artwork, CSS textures, the generated social preview and icon, and the rangoli art and firework animations drawn by `tools/make_festival_art.py`. The diya and flower-rangoli pictures (`diya-*.webp`, `rangoli-crescent.webp`) are original illustrations drawn by `tools/make_diya_art.py`. There are no stock photos, icon packs or web fonts. The song in `site/assets/audio/` is used under the owner's licence.
+Bundled artwork made for this repository: diya and rangoli SVG artwork, CSS textures, the social preview and the icon. The photos on the wall and above the closing blessing are the owner's, or used with the owner's permission. The song clip in `site/assets/audio/` is used under the owner's licence. There are no stock photos, icon packs or web fonts.
 
 - **Fonts**: none are bundled. The page uses fonts already installed on the visitor's device. The social preview image was rendered on Windows with installed system fonts (Palatino Linotype, Nirmala UI). If you need to be strict about font licensing for that image, regenerate it on a machine with open-licensed fonts such as Noto Serif and Noto Sans Devanagari.
 - **Photos and audio you add** belong to you. Only publish media you own or have permission to share, and ask the people in your photos before you publish them.

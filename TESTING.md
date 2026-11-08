@@ -14,16 +14,15 @@ Date: 2026-11-08 · Chrome 154 (macOS) · **29/29 checks passed**
 
 | Area | What was checked | Result |
 | --- | --- | --- |
-| Unit tests (`tests/unit.html`) | 42 cases for `?to=` sanitizing (empty, whitespace-only, 60-char, Devanagari, Tamil, diacritics, HTML/JS payloads, URLs, emails, control and bidi characters, malformed encoding), salutation, copy text, asset-path allow-list, share URL | 42/42 pass |
-| Injection | `?to=` set to `<img src=x onerror=alert(1)>`, `<script>…`, `"><svg onload=…>`, `javascript:…`, `Ananya<b>bold</b>` | Fallback salutation every time, no injected nodes, no dialogs |
-| Names | empty, `Ananya`, whitespace-only, 60 × `A`, `अनन्या`, `  Meera  Iyer ` | Fallback / `Dear Ananya,` / fallback / 40 chars / `Dear अनन्या,` / `Dear Meera Iyer,` |
+| Unit tests (`tests/unit.html`) | Salutation, copy text, asset-path allow-list, share URL | All pass |
+| `?to=` ignored | `?to=` set to names and to `<img src=x onerror=alert(1)>`, `<script>…`, `"><svg onload=…>`, `javascript:…`, `Ananya<b>bold</b>` | "Dear friends and family," every time, no injected nodes, no dialogs |
 | Keyboard | Tab order, Enter to light, focus moves to the heading, Replay returns focus to the button, visible 3 px focus ring | Pass |
 | Live region | "The diya is lit." announced; "Greeting copied." in a status region | Pass |
 | Copy | Clipboard API (text checked, share URL has no `?to=`); legacy `execCommand` fallback with the Clipboard API removed | Pass |
 | Reduced motion | Reveal happens in the same click, with no particles and no flame loop; text fully visible | Pass |
 | Particles | 56 on 1440 px, 28 on 375 px; canvas ≤ 2.5 MP; loop stops on its own; no frames while the page is hidden | Pass |
-| Music | No `AudioContext` or media element before the first click. After **Light the diya** the song plays, loops and stays audible (RMS at least 0.002, peak below 0.99). The button stays visible and pauses it. Replay keeps one media element and one context and does not restart it; the button resumes it. If the song returns 404, the synthesised loop plays instead | Pass |
-| Festival wall | All 19 images load with alt text; a GIF plays when on screen; **Pause fireworks** and reduced motion both show stills | Pass |
+| Music | No `AudioContext` or media element before the first click. After **Light the diya** the 18-second clip is fetched once, decoded and looped in Web Audio; it stays audible for 28 s, past the loop point (RMS at least 0.002, peak below 0.99). The button stays visible and pauses it. Replay keeps one context and does not restart it; the button resumes it. If the clip returns 404, the synthesised loop plays instead | Pass |
+| Photo wall | All 7 photos and the closing diya load, with alt text and no captions | Pass |
 | No JavaScript | Full greeting, Hindi line and blessing visible; doorway, buttons and photo section hidden (no dead controls) | Pass |
 | `main.js` blocked | Falls back to the static greeting | Pass |
 | Missing photo | Placeholder "This photo could not be loaded."; caption and greeting kept | Pass |
@@ -48,5 +47,5 @@ Note: the page's CSP blocks `eval`, which also blocks Playwright's `wait_for_fun
 - [ ] **Lighthouse**: not run, because Node.js is not installed on this machine. In Chrome, open DevTools → Lighthouse against the deployed URL.
 - [ ] **Music**: how it sounds, its volume and how it loops, on real phone speakers and headphones. Automation measures the signal but cannot judge it by ear. Also check iPhone behaviour with the silent switch on and after locking the screen.
 - [ ] **Firework GIFs**: data use and smoothness on a real phone. They total about 7.7 MB, but only those near the screen are downloaded.
-- [ ] **After deployment**: open https://diwali-greeting.diwali-greeting.workers.dev/ and `?to=YourName`, then paste the link into WhatsApp or another messenger to check the preview card.
+- [ ] **After deployment**: open https://diwali-greeting.diwali-greeting.workers.dev/ then paste the link into WhatsApp or another messenger to check the preview card.
 - [ ] **Photos**: after you change them, rerun `python tools/check.py`. It fails if any image still has EXIF or GPS data.

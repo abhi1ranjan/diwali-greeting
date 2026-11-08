@@ -1,29 +1,23 @@
 # Privacy
 
-This is a static greeting page. It is plain HTML, CSS and JavaScript served by GitHub Pages.
+This is a static greeting page. It is plain HTML, CSS and JavaScript served by Cloudflare.
 
 ## What the page itself does
 
 - No cookies, `localStorage` or `sessionStorage`.
 - No analytics, advertising, tracking pixels, fonts or scripts from other sites, or remote embeds.
-- No forms, logins or accounts. The page does not send data anywhere. Its Content Security Policy sets `connect-src 'none'`.
+- No forms, logins or accounts. The page does not send data anywhere. Its only network request from script is to download its own song file (Content Security Policy `connect-src 'self'`).
 - All images, styles and scripts load from the same site. The music file is served from this same site. Nothing plays until you click **Light the diya**, and the **Music** button stops it at any time.
 - **Copy greeting** and **Share** run only when you press them. Copying puts text on your own clipboard. Sharing opens your device's share sheet or copies the link.
 - The page sets `Referrer-Policy: no-referrer` (as a `<meta>` tag). When someone follows a link out of the page, the browser does not send this page's address.
 
-## What GitHub may still process
+## What Cloudflare may still process
 
-GitHub hosts the page. Like any web host, GitHub Pages receives ordinary request data, such as IP address, user agent, requested URL and time. It may log that data for security and operations under the [GitHub Privacy Statement](https://docs.github.com/site-policy/privacy-policies/github-privacy-statement). This page does not control that data.
+Cloudflare hosts the page. Like any web host, it receives ordinary request data, such as IP address, user agent, requested URL and time, and may process it for security and operations under the [Cloudflare Privacy Policy](https://www.cloudflare.com/privacypolicy/). Request logging for this site is turned off in `wrangler.jsonc`. The source code is on GitHub.
 
-## Names in links (`?to=Name`)
+## No names in links
 
-If you share a link such as `.../diwali-greeting/?to=Ananya`, the name is part of the URL. It can appear in:
-
-- the browser history and synced devices of the sender and recipient,
-- screenshots, chat messages and messaging-app link previews,
-- server request logs, including GitHub's.
-
-Use first names or nicknames only. Never put email addresses, phone numbers or private messages in the link. The **Share** and **Copy greeting** buttons use the plain page address, without `?to=`.
+The page no longer reads names from the link. A `?to=` parameter, or any other, is ignored, so every visitor sees "Dear friends and family,".
 
 ## Photos
 

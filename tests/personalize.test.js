@@ -16,54 +16,8 @@
       throw new Error('expected ' + JSON.stringify(expected) + ' but got ' + JSON.stringify(actual));
     }
   }
-  const qs = (value) => '?to=' + encodeURIComponent(value);
-
-  // ── sanitizeRecipient / readRecipient ──────────────────────────────────────
-  test('plain name', () => equal(P.readRecipient('?to=Ananya'), 'Ananya'));
-  test('name with surrounding whitespace is trimmed', () => equal(P.readRecipient(qs('   Ananya  ')), 'Ananya'));
-  test('inner whitespace collapses to one space', () => equal(P.readRecipient(qs('Ravi \t\n  Kumar')), 'Ravi Kumar'));
-  test('plus sign decodes to a space', () => equal(P.readRecipient('?to=Meera+Iyer'), 'Meera Iyer'));
-  test('missing parameter returns empty', () => equal(P.readRecipient(''), ''));
-  test('other parameters are ignored', () => equal(P.readRecipient('?from=Ananya'), ''));
-  test('empty value returns empty', () => equal(P.readRecipient('?to='), ''));
-  test('whitespace-only returns empty', () => equal(P.readRecipient(qs('   \t  ')), ''));
-  test('HTML injection is rejected', () => equal(P.readRecipient(qs('<img src=x onerror=alert(1)>')), ''));
-  test('script tag is rejected', () => equal(P.readRecipient(qs('<script>alert(1)</script>')), ''));
-  test('javascript: scheme is rejected', () => equal(P.readRecipient(qs('javascript:alert(1)')), ''));
-  test('quotes and angle brackets are rejected', () => equal(P.readRecipient(qs('"><svg onload=alert(1)>')), ''));
-  test('URL is rejected', () => equal(P.readRecipient(qs('https://example.com')), ''));
-  test('email address is rejected', () => equal(P.readRecipient(qs('ananya@example.com')), ''));
-  test('control characters are rejected', () => equal(P.sanitizeRecipient('Ana\u0000nya'), ''));
-  test('bidi override characters are rejected', () => equal(P.sanitizeRecipient('Ana\u202Enya'), ''));
-  test('punctuation only is rejected', () => equal(P.sanitizeRecipient("..-'"), ''));
-  test('non-string input returns empty', () => equal(P.sanitizeRecipient(null), ''));
-  test('too long is truncated to 40 characters', () => {
-    const name = P.readRecipient(qs('A'.repeat(60)));
-    equal(name.length, 40);
-    equal(name, 'A'.repeat(40));
-  });
-  test('truncation does not leave trailing space', () => {
-    equal(P.sanitizeRecipient('A'.repeat(39) + ' Bcdef'), 'A'.repeat(39));
-  });
-  test('Devanagari name is preserved', () => equal(P.readRecipient(qs('अनन्या')), 'अनन्या'));
-  test('Latin diacritics are preserved', () => equal(P.readRecipient(qs('Ananyā Shāh')), 'Ananyā Shāh'));
-  test('Tamil name is preserved', () => equal(P.readRecipient(qs('அனன்யா')), 'அனன்யா'));
-  test('apostrophe, hyphen and ampersand are allowed', () => {
-    equal(P.readRecipient(qs("D'Souza-Rao & family")), "D'Souza-Rao & family");
-  });
-  test('long Devanagari truncates on grapheme boundaries', () => {
-    const out = P.sanitizeRecipient('अनन्या'.repeat(20));
-    const graphemes = typeof Intl.Segmenter === 'function'
-      ? Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(out)).length
-      : Array.from(out).length;
-    if (graphemes > 40) throw new Error('more than 40 graphemes: ' + graphemes);
-    if (!/^[\u0900-\u097F]+$/.test(out)) throw new Error('unexpected characters: ' + out);
-  });
-  test('custom parameter name', () => equal(P.readRecipient('?name=Kabir', 'name'), 'Kabir'));
-  test('malformed percent-encoding does not throw', () => equal(P.readRecipient('?to=%E0%A4'), ''));
 
   // ── buildSalutation ────────────────────────────────────────────────────────
-  test('salutation with name', () => equal(P.buildSalutation('Ananya', {}), 'Dear Ananya,'));
   test('salutation fallback', () => equal(P.buildSalutation('', {}), 'Dear friends and family,'));
   test('salutation honours options', () => {
     equal(P.buildSalutation('', { greetingWord: 'Hello', fallback: 'everyone' }), 'Hello everyone,');

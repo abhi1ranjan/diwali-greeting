@@ -10,7 +10,7 @@
   const root = document.documentElement;
   const body = document.body;
   const features = Object.assign(
-    { moments: true, sound: false, share: true, hindiLine: true, urlPersonalization: true, animation: 'full' },
+    { moments: true, sound: false, share: true, hindiLine: true, animation: 'full' },
     content.features
   );
   const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -50,10 +50,7 @@
 
   // ── Content ────────────────────────────────────────────────────────────────
   const recipientOptions = content.recipient || {};
-  const recipient = features.urlPersonalization
-    ? P.readRecipient(window.location.search, recipientOptions.param)
-    : '';
-  const salutation = P.buildSalutation(recipient, recipientOptions);
+  const salutation = P.buildSalutation('', recipientOptions);
   const threshold = content.threshold || {};
   const hindiLine = features.hindiLine ? content.hindiLine || '' : '';
   const pageUrl = P.pageUrl(window.location);
@@ -68,7 +65,6 @@
   setText('sender', content.sender);
   setText('blessing', content.blessing);
   setText('moments-title', content.momentsTitle);
-  setText('moments-note', content.momentsNote);
   if (hindiLine) ui.hindi.textContent = hindiLine;
   else ui.hindi.hidden = true;
 
@@ -542,11 +538,46 @@
       master.gain.linearRampToValueAtTime(Math.max(0.0001, target), now + seconds);
     }
 
+    // Decode the song and loop it in Web Audio: an <audio> loop leaves a small gap
+    // at the loop point, a decoded buffer does not. Any failure falls back to the
+    // synthesised loop.
+    function audibleRange(buffer) {
+      const data = buffer.getChannelData(0);
+      const edge = Math.floor(buffer.sampleRate * 0.25);
+      let first = 0;
+      let last = data.length - 1;
+      while (first < edge && Math.abs(data[first]) < 1e-4) first += 1;
+      while (last > data.length - edge && Math.abs(data[last]) < 1e-4) last -= 1;
+      return [first / buffer.sampleRate, (last + 1) / buffer.sampleRate];
+    }
+
+    function beginSong() {
+      window.fetch(src, { credentials: 'omit' })
+        .then((response) => {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return response.arrayBuffer();
+        })
+        .then((data) => new Promise((done, fail) => ctx.decodeAudioData(data, done, fail)))
+        .then((buffer) => {
+          const source = ctx.createBufferSource();
+          const [start, end] = audibleRange(buffer);
+          source.buffer = buffer;
+          source.loop = settings.loop !== false;
+          source.loopStart = start;
+          source.loopEnd = end;
+          source.connect(master);
+          source.start(ctx.currentTime + 0.05, start);
+          fadeSynth(level, FADE_IN);
+        })
+        .catch(() => beginSynth());
+    }
+
     function begin() {
       started = true;
       try {
         if (AudioCtx) setUpOutput();
-        if (src) beginFile();
+        if (src && ctx && window.fetch) beginSong();
+        else if (src) beginFile();
         else beginSynth();
       } catch (error) {
         started = false;

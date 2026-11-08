@@ -323,7 +323,7 @@ with sync_playwright() as pw:
         scene = page.evaluate("document.body.dataset.scene")
         after_replay = active()
         ok = (first == "light-button" and second == "sound-toggle" and after_reveal == "greeting-title"
-              and order[:4] == ["fireworks-toggle", "replay-button", "copy-button", "share-button"] and scene == "sealed"
+              and order[:3] == ["replay-button", "copy-button", "share-button"] and scene == "sealed"
               and after_replay == "light-button" and "none" not in outline and announced == "The diya is lit.")
         record(ok, "keyboard: focus order, reveal, replay",
                f"tab1={first} ({outline}) tab2={second} afterReveal={after_reveal} announced='{announced}' "
@@ -334,14 +334,14 @@ with sync_playwright() as pw:
     def _copy():
         ctx, page = open_page(browser)
         ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=f"http://127.0.0.1:{PORT}")
-        page.goto(URL + "?to=Ananya")
+        page.goto(URL)
         light(page)
         page.click("#copy-button")
         wait_until(page, "document.getElementById('action-status').textContent.length > 0")
         status = page.inner_text("#action-status")
         clip = page.evaluate("navigator.clipboard.readText()")
         share_label = page.inner_text("#share-button")
-        ok = (status == "Greeting copied." and clip.startswith("Dear Ananya,") and "Happy Diwali" in clip
+        ok = (status == "Greeting copied." and clip.startswith("Dear friends and family,") and "Happy Diwali" in clip
               and "दीपावली" in clip and clip.rstrip().endswith(URL) and "?to=" not in clip)
         record(ok, "copy greeting via Clipboard API",
                f"status='{status}' share_label='{share_label}' clipboard={clip!r}")
@@ -361,7 +361,7 @@ with sync_playwright() as pw:
                "copy fallback when Clipboard API is unavailable", f"status='{status}' focus={focus} errors={page.__errors}")
         ctx.close()
 
-    @check("URL personalisation: injection payloads are inert")
+    @check("?to= is ignored: injection payloads are inert")
     def _xss():
         payloads = ["<img src=x onerror=alert(1)>", "<script>alert(1)</script>", '"><svg onload=alert(1)>',
                     "javascript:alert(1)", "Ananya<b>bold</b>"]
@@ -376,21 +376,19 @@ with sync_playwright() as pw:
             ok &= good
             detail.append(f"{value!r} -> {sal!r} injected={injected} dialogs={page.__dialogs}")
             ctx.close()
-        record(ok, "URL personalisation: injection payloads are inert", " | ".join(detail))
+        record(ok, "?to= is ignored: injection payloads are inert", " | ".join(detail))
 
-    @check("URL personalisation: names")
+    @check("?to= is ignored: names are not shown")
     def _names():
-        cases = [("", "Dear friends and family,"), ("Ananya", "Dear Ananya,"), ("   ", "Dear friends and family,"),
-                 ("A" * 60, "Dear " + "A" * 40 + ","), ("अनन्या", "Dear अनन्या,"), ("  Meera  Iyer ", "Dear Meera Iyer,")]
         detail, ok = [], True
-        for value, expected in cases:
+        for value in ["", "Ananya", "अनन्या"]:
             ctx, page = open_page(browser, query=("?to=" + quote(value)) if value else "")
             light(page)
             sal = page.inner_text("#salutation")
-            ok &= sal == expected
+            ok &= sal == "Dear friends and family,"
             detail.append(f"{value!r} -> {sal!r}")
             ctx.close()
-        record(ok, "URL personalisation: names", " | ".join(detail))
+        record(ok, "?to= is ignored: names are not shown", " | ".join(detail))
 
     @check("reduced motion: immediate, static reveal")
     def _reduced():
@@ -466,45 +464,46 @@ with sync_playwright() as pw:
                f"contexts on load={contexts} media elements={media} errors={page.__errors}")
         ctx.close()
 
-    @check("music: song starts on light, loops, button pauses, Replay adds no second copy")
+    @check("music: song clip loops seamlessly from light, button pauses, Replay adds no second copy")
     def _music_play():
         ctx, page = open_page(browser)
         pressed_before = page.get_attribute("#sound-toggle", "aria-pressed")
         light(page)
-        page.wait_for_timeout(3000)
-        info = page.evaluate("""() => { const m = window.__media[0]; return m ? { src: m.currentSrc, loop: m.loop,
-            paused: m.paused, time: m.currentTime } : null; }""")
+        page.wait_for_timeout(2500)
+        fetched = [u for u, s in page.__requests if u.endswith("assets/audio/jai-raghuvanshi-loop.m4a") and s == 200]
+        started = page.evaluate("window.__audioContext.state")
         samples = []
-        for _ in range(10):
+        for _ in range(28):  # 0:02.5 to 0:30, past the 18-second loop point
             samples.append(page.evaluate("window.__level()"))
-            page.wait_for_timeout(700)
+            page.wait_for_timeout(1000)
         rms = [s["rms"] for s in samples]
         peak = max(s["peak"] for s in samples)
         visible = page.is_visible("#sound-toggle")
         page.click("#sound-toggle")
         page.wait_for_timeout(600)
-        paused = page.evaluate("window.__media[0].paused")
+        paused = page.evaluate("window.__audioContext.state")
         state_off = page.inner_text("#sound-state")
         page.focus("#replay-button")
         page.keyboard.press("Enter")
         page.wait_for_timeout(100)
         page.click("#light-button")
         wait_until(page, "document.body.dataset.scene === 'revealed'")
-        still_paused = page.evaluate("window.__media[0].paused")
+        still_paused = page.evaluate("window.__audioContext.state")
         page.click("#sound-toggle")
-        page.wait_for_timeout(1800)
-        resumed = not page.evaluate("window.__media[0].paused")
+        page.wait_for_timeout(1500)
+        resumed = page.evaluate("window.__audioContext.state")
         audible = page.evaluate("window.__level().rms")
-        copies = page.evaluate("window.__media.length")
         contexts = page.evaluate("window.__audioContexts")
-        ok = (pressed_before == "true" and info and info["src"].endswith("assets/audio/diwali-song.m4a") and info["loop"]
-              and not info["paused"] and info["time"] > 1 and min(rms) > 0.002 and peak < 0.99 and visible
-              and paused and state_off == "Off" and still_paused and resumed and audible > 0.002
-              and copies == 1 and contexts == 1 and not page.__errors)
-        record(ok, "music: song starts on light, loops, button pauses, Replay adds no second copy",
-               f"media={info}; rms min={min(rms):.4f} max={max(rms):.4f} peak={peak:.3f}; toggle visible={visible}; "
-               f"paused={paused}/{state_off}; after replay paused={still_paused}; resumed={resumed} rms={audible:.4f}; "
-               f"media elements={copies} contexts={contexts}; errors={page.__errors}")
+        media = page.evaluate("window.__media.length")
+        fetches = len([u for u, s in page.__requests if "assets/audio/" in u])
+        ok = (pressed_before == "true" and fetched and started == "running" and min(rms) > 0.002 and peak < 0.99
+              and visible and paused == "suspended" and state_off == "Off" and still_paused == "suspended"
+              and resumed == "running" and audible > 0.002 and contexts == 1 and media == 0 and fetches == 1
+              and not page.__errors)
+        record(ok, "music: song clip loops seamlessly from light, button pauses, Replay adds no second copy",
+               f"fetched={bool(fetched)} state={started}; rms min={min(rms):.4f} max={max(rms):.4f} peak={peak:.3f} over 28s; "
+               f"toggle visible={visible}; paused={paused}/{state_off}; after replay={still_paused}; resumed={resumed} "
+               f"rms={audible:.4f}; contexts={contexts} media elements={media} audio fetches={fetches}; errors={page.__errors}")
         ctx.close()
 
     @check("music: missing song falls back to the synthesised loop")
@@ -523,37 +522,20 @@ with sync_playwright() as pw:
                f"context={state} rms={rms:.4f} aria-pressed={pressed} other errors={uncaught}")
         ctx.close()
 
-    @check("gallery: all images load, GIFs play on screen, Pause and reduced motion use stills")
+    @check("gallery: all 7 photos load with alt text")
     def _gallery():
-        def all_loaded(page):
-            for item in page.locator(".moment").all():
-                item.scroll_into_view_if_needed()
-                page.wait_for_timeout(120)
-            wait_until(page, "[...document.querySelectorAll('.moment img')].every(i => i.complete && i.naturalWidth > 0)", 15000)
         ctx, page = open_page(browser, width=1440, height=900)
         light(page)
         count = page.locator(".moment img").count()
         alts = page.evaluate("[...document.querySelectorAll('.moment img')].every(i => i.alt.length > 10)")
-        all_loaded(page)
-        last = page.locator(".moment--slot-p")
-        last.scroll_into_view_if_needed()
-        wait_until(page, "document.querySelector('.moment--slot-p img').currentSrc.endsWith('.gif')", 8000)
-        page.click("#fireworks-toggle")
-        stills = page.evaluate("[...document.querySelectorAll('.moment img')].filter(i => /fireworks-/.test(i.src)).every(i => i.getAttribute('src').endsWith('-still.webp'))")
-        label = page.inner_text("#fireworks-toggle")
-        errors = list(page.__errors)
+        for item in page.locator(".moment").all():
+            item.scroll_into_view_if_needed()
+            page.wait_for_timeout(120)
+        wait_until(page, "[...document.querySelectorAll('.moment img, .closing__diya')].every(i => i.complete && i.naturalWidth > 0)", 15000)
+        captions = page.locator(".moment__caption").count()
+        record(count == 7 and alts and captions == 0 and not page.__errors, "gallery: all 7 photos load with alt text",
+               f"images={count} alts ok={alts} captions={captions} errors={page.__errors}")
         ctx.close()
-        ctx = browser.new_context(reduced_motion="reduce", viewport={"width": 1440, "height": 900})
-        page = ctx.new_page()
-        page.goto(URL)
-        page.click("#light-button")
-        page.locator(".moment--slot-p").scroll_into_view_if_needed()
-        page.wait_for_timeout(500)
-        reduced = page.evaluate("[...document.querySelectorAll('.moment img')].filter(i => /fireworks-/.test(i.src)).every(i => i.getAttribute('src').endsWith('-still.webp'))")
-        ctx.close()
-        record(count == 19 and alts and stills and label == "Play fireworks" and reduced and not errors,
-               "gallery: all images load, GIFs play on screen, Pause and reduced motion use stills",
-               f"images={count} alts ok={alts} stills after pause={stills} label='{label}' reduced motion stills={reduced} errors={errors}")
 
     @check("no-JS: full greeting, no dead controls")
     def _nojs():

@@ -528,13 +528,6 @@ main,
   color: var(--flame);
 }
 
-.diya-row {
-  display: block;
-  width: min(100%, 34rem);
-  height: auto;
-  margin: 1.5rem auto 0;
-}
-
 /* Reveal choreography (JavaScript experience only). */
 .js [data-scene="revealed"] .greeting__art {
   animation: bloom 1.4s var(--ease) both;
@@ -655,26 +648,14 @@ main,
   }
 }
 
-/* Mobile placement: a full-width picture, then pairs at different sizes. */
-.moment--slot-a { grid-column: 1 / -1; --tilt: -0.8deg; }
-.moment--slot-b { grid-column: 2 / 6; z-index: 2; }
-.moment--slot-c { grid-column: 1 / 5; --tilt: -1.5deg; }
-.moment--slot-d { grid-column: 5 / 7; }
-.moment--slot-e { grid-column: 1 / -1; --tilt: 0.6deg; }
-.moment--slot-f { grid-column: 1 / 3; }
+/* Mobile placement: pairs that overlap a little, around one full-width photo. */
+.moment--slot-a { grid-column: 1 / 5; --tilt: -1.5deg; }
+.moment--slot-b { grid-column: 2 / 7; margin-top: -2rem; z-index: 2; }
+.moment--slot-c { grid-column: 1 / 5; --tilt: 1.5deg; }
+.moment--slot-d { grid-column: 1 / -1; --tilt: -0.6deg; }
+.moment--slot-e { grid-column: 2 / 7; --tilt: -1.5deg; }
+.moment--slot-f { grid-column: 1 / 5; margin-top: -2rem; z-index: 2; }
 .moment--slot-g { grid-column: 3 / 7; --tilt: 2deg; }
-.moment--slot-h { grid-column: 1 / 4; }
-.moment--slot-i { grid-column: 4 / 7; --tilt: -2deg; }
-.moment--slot-j { grid-column: 1 / 3; }
-.moment--slot-k { grid-column: 1 / -1; --tilt: -0.6deg; }
-.moment--slot-l { grid-column: 3 / 7; margin-top: -1rem; z-index: 2; }
-.moment--slot-m { grid-column: 1 / 5; --tilt: 1.2deg; }
-.moment--slot-n { grid-column: 5 / 7; }
-.moment--slot-o { grid-column: 3 / 5; }
-.moment--slot-q { grid-column: 1 / 4; --tilt: -1.5deg; }
-.moment--slot-r { grid-column: 4 / 7; }
-.moment--slot-s { grid-column: 1 / -1; --tilt: 0.8deg; }
-.moment--slot-p { grid-column: 1 / -1; }
 
 @media (min-width: 56rem) {
   .moments__list {
@@ -682,25 +663,13 @@ main,
     gap: 2.5rem 1.25rem;
   }
 
-  .moment--slot-a { grid-area: 1 / 1 / auto / 5; --tilt: -2.5deg; margin-top: 7rem; }
+  .moment--slot-a { grid-area: 1 / 1 / auto / 5; --tilt: -2.5deg; margin-top: 5rem; }
   .moment--slot-b { grid-area: 1 / 5 / auto / 9; --tilt: 0deg; margin: 0 -1rem; z-index: 2; }
-  .moment--slot-c { grid-area: 1 / 10 / auto / 13; --tilt: 2.5deg; margin-top: 3rem; }
-  .moment--slot-d { grid-area: 2 / 1 / auto / 4; margin-top: -2rem; }
-  .moment--slot-e { grid-area: 2 / 4 / auto / 10; --tilt: 0deg; z-index: 1; }
-  .moment--slot-f { grid-area: 2 / 10 / auto / 13; margin-top: 5rem; }
-  .moment--slot-g { grid-area: 3 / 1 / auto / 5; --tilt: -3.5deg; margin-top: 3rem; }
-  .moment--slot-h { grid-area: 3 / 5 / auto / 9; --tilt: 0deg; margin: -1rem 1.5rem 0; }
-  .moment--slot-i { grid-area: 3 / 9 / auto / 12; --tilt: 3.5deg; margin: 2rem 0 0 2rem; }
-  .moment--slot-j { grid-area: 4 / 1 / auto / 4; margin-top: 3rem; }
-  .moment--slot-k { grid-area: 4 / 4 / auto / 10; --tilt: 0deg; z-index: 1; }
-  .moment--slot-l { grid-area: 4 / 10 / auto / 13; margin-top: -5rem; }
-  .moment--slot-m { grid-area: 5 / 1 / auto / 5; --tilt: -2deg; }
-  .moment--slot-n { grid-area: 5 / 5 / auto / 9; margin: 0 2rem; }
-  .moment--slot-o { grid-area: 5 / 10 / auto / 13; margin-top: 4rem; }
-  .moment--slot-q { grid-area: 6 / 1 / auto / 4; --tilt: -2.5deg; margin-top: 2rem; }
-  .moment--slot-r { grid-area: 6 / 4 / auto / 9; margin: 0 1rem; z-index: 2; }
-  .moment--slot-s { grid-area: 6 / 9 / auto / 13; --tilt: 2deg; margin-top: 4rem; }
-  .moment--slot-p { grid-area: 7 / 3 / auto / 11; --tilt: 0deg; margin-top: -1rem; z-index: 1; }
+  .moment--slot-c { grid-area: 1 / 9 / auto / 13; --tilt: 2.5deg; margin: 3rem 0 0 1rem; }
+  .moment--slot-d { grid-area: 2 / 3 / auto / 11; --tilt: 0deg; z-index: 1; }
+  .moment--slot-e { grid-area: 3 / 1 / auto / 5; --tilt: -2deg; margin: 1rem 1rem 0 0; }
+  .moment--slot-f { grid-area: 3 / 5 / auto / 9; margin: 4rem 0.5rem 0; z-index: 2; }
+  .moment--slot-g { grid-area: 3 / 9 / auto / 12; --tilt: 3deg; margin: 1rem 0 0 1.5rem; }
 }
 
 .moment__figure {
@@ -761,22 +730,8 @@ main,
   animation: rangoli-turn 140s linear infinite;
 }
 
-.moment--slot-f img,
-.moment--slot-n img {
-  animation-direction: reverse;
-}
-
 @keyframes rangoli-turn {
   to { rotate: 360deg; }
-}
-
-.moments__note {
-  max-width: 34rem;
-  margin: 2.5rem auto 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  text-align: center;
-  color: var(--text-soft);
 }
 
 /* Stays on screen in every scene, so the music can always be stopped. */
